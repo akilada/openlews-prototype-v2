@@ -1,0 +1,2 @@
+# Ingestor Lambda Dependencies
+# Note: boto3 is pre-installed in Lambda runtime

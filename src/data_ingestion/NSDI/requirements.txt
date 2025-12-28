@@ -1,0 +1,21 @@
+# OpenLEWS Data Ingestion Requirements
+
+# Core dependencies
+boto3>=1.34.0,<2.0.0
+python-dotenv>=1.0.0,<2.0.0
+requests>=2.31.0,<3.0.0
+
+# Geospatial processing
+pygeohash>=1.2.0,<2.0.0
+
+# For embeddings
+sentence-transformers>=2.2.0,<3.0.0
+
+# Optional: Pinecone client
+pinecone>=7.3.0,<8.0.0
+
+# For Lambda development 
+aws-lambda-powertools>=2.0.0,<3.0.0
+
+# For urllib3/requests conflicts in some environments, uncomment:
+# urllib3<2
