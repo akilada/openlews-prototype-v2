@@ -45,6 +45,7 @@ OpenLEWS implements a paradigm shift from regional probabilistic forecasting to 
 
 ## Architecture
 
+### Logical Architecture
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         PRESENTATION LAYER                                  │
@@ -107,6 +108,10 @@ OpenLEWS implements a paradigm shift from regional probabilistic forecasting to 
 │   └──────────────────┘   └──────────────────┘   └────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+### AWS Cloud Architecture
+
+![openlews-aws-cloud-architecture-v2](docs/images/openlews-aws-cloud-architecture-v2.jpg)
 
 ---
 
@@ -445,11 +450,11 @@ Budget alert configured at $15/month.
 
 | Component | README |
 |-----------|--------|
-| Detection Engine | [src/lambdas/detector/README.md](src/lambdas/detector/README.md) |
-| Telemetry Ingestor | [src/lambdas/telemetry_ingestor/README.md](src/lambdas/telemetry_ingestor/README.md) |
-| RAG Query Engine | [src/lambdas/rag/README.md](src/lambdas/rag/README.md) |
-| NDIS Data Ingestion | [src/data_ingestion/NSDI/README.md](src/data_ingestion/NSDI/README.md) |
-| Infrastructure | [infrastructure/README.md](infrastructure/README.md) |
+| Detection Engine | [src/lambdas/detector/DETECTOR.md](src/lambdas/detector/DETECTOR.md) |
+| Telemetry Ingestor | [src/lambdas/telemetry_ingestor/TELEMETRY.md](src/lambdas/telemetry_ingestor/TELEMETRY.md) |
+| RAG Query Engine | [src/lambdas/rag/RAG_QUERY.md](src/lambdas/rag/RAG_QUERY.md) |
+| NDIS Data Ingestion | [src/data_ingestion/NSDI/NSDI_INGESTION.md](src/data_ingestion/NSDI/NSDI_INGESTION.md) |
+| Infrastructure | [infrastructure/INFRASTRUCTURE.md](infrastructure/INFRASTRUCTURE.md) |
 
 ---
 
