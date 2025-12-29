@@ -8,6 +8,9 @@
 [![AWS](https://img.shields.io/badge/Cloud-AWS-orange.svg)](https://aws.amazon.com/)
 [![Python 3.11](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
 [![Terragrunt](https://img.shields.io/badge/IaC-Terragrunt-purple.svg)](https://terragrunt.gruntwork.io/)
+[![Claude](https://img.shields.io/badge/Claude-D97757)](https://claude.ai)
+[![Ollama](https://img.shields.io/badge/ollama-%23000000.svg?&logo=ollama&logoColor=white)]()
+
 
 </div>
 
