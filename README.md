@@ -45,7 +45,12 @@ OpenLEWS implements a paradigm shift from regional probabilistic forecasting to 
 
 ## Architecture
 
-### Logical Architecture
+### Architecture diagram (HTML)
+
+Open the interactive diagram: [openlews-architecture.html](docs/openlews-architecture-v2.html)
+
+### Logical Architecture (Layered View)
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         PRESENTATION LAYER                                  │

@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenLEWS Prototype v2 - Architecture</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #111827 100%);
+      color: #e5e7eb;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 28px; }
+    h1 { font-size: 2.6rem; margin-bottom: 10px; font-weight: 800; color: #f8fafc; }
+    .subtitle { font-size: 1.05rem; color: #cbd5e1; margin-bottom: 10px; }
+    .note {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+      font-size: 0.95rem;
+      line-height: 1.35rem;
+    }
+    .note strong { color: #f8fafc; }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    .layer {
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 16px;
+      border: 2px solid;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+    }
+
+    .layer-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(255,255,255,0.12);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .service {
+      display: flex;
+      align-items: center;
+      margin: 12px 0;
+      padding: 10px;
+      background: rgba(0,0,0,0.22);
+      border-radius: 10px;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+    .service:hover { transform: translateX(4px); background: rgba(0,0,0,0.35); }
+
+    .service-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      font-size: 1.05rem;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #64748b, #334155);
+    }
+
+    .service-info { flex: 1; }
+    .service-name { font-weight: 800; margin-bottom: 2px; color: #f8fafc; font-size: 0.98rem; }
+    .service-desc { font-size: 0.82rem; color: #cbd5e1; line-height: 1.05rem; }
+
+    .aws-cloud {
+      background: rgba(30, 41, 59, 0.6);
+      border-radius: 14px;
+      padding: 18px;
+      border: 2px solid rgba(96,165,250,0.4);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      position: relative;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+    }
+
+    .aws-cloud::before {
+      content: "AWS (Prototype v2)";
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: #0f172a;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: #60a5fa;
+      border: 2px solid rgba(96,165,250,0.4);
+    }
+
+    /* Layer border colours */
+    .presentation-layer { border-color: #a78bfa; }
+    .ingestion-layer { border-color: #60a5fa; }
+    .detection-layer { border-color: #f472b6; }
+    .rag-layer { border-color: #fb923c; }
+    .storage-layer { border-color: #34d399; }
+    .pipeline-layer { border-color: #2dd4bf; }
+    .notification-layer { border-color: #facc15; }
+    .observability-layer { border-color: #94a3b8; }
+    .iac-layer { border-color: #7c4dff; }
+
+    /* Icon colours */
+    .thingsboard { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
+    .react { background: linear-gradient(135deg, #38bdf8, #0ea5e9); }
+    .simulator { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .iot { background: linear-gradient(135deg, #ff6b6b, #ff8e8e); }
+
+    .apigw { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+    .lambda { background: linear-gradient(135deg, #f472b6, #ec4899); }
+    .eventbridge { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .dynamodb { background: linear-gradient(135deg, #34d399, #10b981); }
+    .s3 { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+    .kms { background: linear-gradient(135deg, #9ca3af, #6b7280); }
+    .bedrock { background: linear-gradient(135deg, #fb923c, #f97316); }
+    .location { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
+    .pinecone { background: linear-gradient(135deg, #22d3ee, #06b6d4); }
+    .sns { background: linear-gradient(135deg, #facc15, #eab308); }
+    .cloudwatch { background: linear-gradient(135deg, #94a3b8, #64748b); }
+    .secrets { background: linear-gradient(135deg, #f87171, #ef4444); }
+    .external { background: linear-gradient(135deg, #2dd4bf, #14b8a6); }
+    .tofu { background: linear-gradient(135deg, #ffb900, #ffd54f); }
+
+    .data-flow {
+      margin-top: 26px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 18px;
+      border: 2px solid rgba(255,255,255,0.12);
+    }
+
+    .flow-title { font-size: 1.15rem; font-weight: 900; margin-bottom: 14px; color: #f8fafc; }
+    .flow-steps { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .flow-step {
+      background: rgba(0, 0, 0, 0.26);
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      white-space: nowrap;
+    }
+    .flow-arrow { color: #60a5fa; font-weight: 900; }
+
+    .alert-sample {
+      margin-top: 18px;
+      background: rgba(244,114,182,0.14);
+      border-radius: 14px;
+      padding: 16px;
+      border: 2px solid rgba(244,114,182,0.36);
+    }
+
+    .alert-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .alert-icon { font-size: 2rem; }
+    .alert-title { font-weight: 900; font-size: 1.05rem; color: #f8fafc; }
+    .alert-subtitle { font-size: 0.9rem; color: #cbd5e1; }
+
+    .alert-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 10px; }
+    .alert-detail {
+      background: rgba(0,0,0,0.22);
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .alert-detail-label { font-size: 0.75rem; color: #cbd5e1; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .alert-detail-value { font-weight: 900; color: #f8fafc; font-size: 0.95rem; }
+
+    .bottom-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 22px; }
+    .info-box {
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 16px;
+      border: 2px solid rgba(255,255,255,0.12);
+    }
+    .info-box h3 { font-size: 1.05rem; margin-bottom: 10px; font-weight: 900; color: #f8fafc; }
+    .info-list { list-style: none; }
+    .info-list li { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
+    .info-list li:last-child { border-bottom: none; }
+
+    .badge { padding: 3px 9px; border-radius: 999px; font-size: 0.75rem; font-weight: 900; }
+    .badge-blue { background: rgba(96,165,250,0.2); color: #93c5fd; }
+    .badge-green { background: rgba(52,211,153,0.2); color: #6ee7b7; }
+    .badge-orange { background: rgba(251,146,60,0.2); color: #fdba74; }
+    .badge-pink { background: rgba(244,114,182,0.2); color: #f9a8d4; }
+    .badge-yellow { background: rgba(250,204,21,0.2); color: #fde047; }
+    .badge-gray { background: rgba(148,163,184,0.2); color: #cbd5e1; }
+    .badge-purple { background: rgba(167,139,250,0.2); color: #c4b5fd; }
+
+    footer {
+      text-align: center;
+      margin-top: 22px;
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 1080px) {
+      .architecture { grid-template-columns: 1fr; }
+      .aws-cloud { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>🏔️ OpenLEWS Prototype v2 — Architecture</h1>
+      <p class="subtitle">IoT Telemetry → Hazard-Zone RAG → Bedrock Reasoning → Actionable Alerts (Sri Lanka)</p>
+      <div class="note">
+        <strong>What this diagram represents:</strong> the current public prototype build — API Gateway + three Lambda services
+        (Telemetry Ingestor, Detector, RAG Query), DynamoDB tables, Pinecone, Amazon Location, SNS alerting, and a manual NSDI ingestion pipeline.
+      </div>
+    </header>
+
+    <div class="architecture">
+      <!-- LEFT: Presentation + Edge (non-AWS + prototype UI) -->
+      <div class="layer presentation-layer">
+        <div class="layer-title">🖥️ Presentation & Edge</div>
+
+        <div class="service">
+          <div class="service-icon thingsboard">📟</div>
+          <div class="service-info">
+            <div class="service-name">ThingsBoard</div>
+            <div class="service-desc">IoT platform (devices, dashboards, rule chains)</div>
+          </div>
+        </div>
+
+        <div class="service">
+          <div class="service-icon react">⚛️</div>
+          <div class="service-info">
+            <div class="service-name">React Dashboard (Future)</div>
+            <div class="service-desc">Optional UI for maps + alerts</div>
+          </div>
+        </div>
+
+        <div class="service">
+          <div class="service-icon simulator">🧪</div>
+          <div class="service-info">
+            <div class="service-name">Python Simulator</div>
+            <div class="service-desc">Scenario replay + synthetic sensors</div>
+          </div>
+        </div>
+
+        <div class="service">
+          <div class="service-icon iot">📡</div>
+          <div class="service-info">
+            <div class="service-name">Multi-Sensor Telemetry</div>
+            <div class="service-desc">Moisture, tilt, vibration, pore pressure, safety factor</div>
+          </div>
+        </div>
+
+        <div class="service">
+          <div class="service-icon iot">🔐</div>
+          <div class="service-info">
+            <div class="service-name">Auth & Transport</div>
+            <div class="service-desc">ThingsBoard (MQTT/HTTP) + AWS API key (x-api-key)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: AWS -->
+      <div class="aws-cloud">
+
+        <div class="layer ingestion-layer">
+          <div class="layer-title">⬇️ Data Ingestion</div>
+
+          <div class="service">
+            <div class="service-icon apigw">🌐</div>
+            <div class="service-info">
+              <div class="service-name">API Gateway</div>
+              <div class="service-desc">POST <code>/telemetry</code> (API key + quotas)</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon lambda">λ</div>
+            <div class="service-info">
+              <div class="service-name">Telemetry Ingestor Lambda</div>
+              <div class="service-desc">Validate → enrich (NDIS) → write telemetry (TTL)</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon eventbridge">⚡</div>
+            <div class="service-info">
+              <div class="service-name">EventBridge (High-Risk Bus)</div>
+              <div class="service-desc">Publishes high-risk events for downstream use</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="layer detection-layer">
+          <div class="layer-title">🧠 Detection Engine</div>
+
+          <div class="service">
+            <div class="service-icon eventbridge">⏱️</div>
+            <div class="service-info">
+              <div class="service-name">EventBridge Schedule</div>
+              <div class="service-desc"><code>rate(15 minutes)</code> triggers Detector</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon lambda">λ</div>
+            <div class="service-info">
+              <div class="service-name">Detector Lambda</div>
+              <div class="service-desc">RiskScorer + spatial cluster detection (3+ sensors)</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon bedrock">🤖</div>
+            <div class="service-info">
+              <div class="service-name">Bedrock Client</div>
+              <div class="service-desc">Claude 3 Haiku: assessment + narrative (Orange/Red)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="layer rag-layer">
+          <div class="layer-title">🔎 RAG & Geospatial Context</div>
+
+          <div class="service">
+            <div class="service-icon lambda">λ</div>
+            <div class="service-info">
+              <div class="service-name">RAG Query Lambda</div>
+              <div class="service-desc">Geohash precision=4 + neighbour expansion + Haversine</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon dynamodb">🗺️</div>
+            <div class="service-info">
+              <div class="service-name">DynamoDB Hazard Zones</div>
+              <div class="service-desc">GeoHashIndex for fast zone candidate lookup</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon pinecone">🔍</div>
+            <div class="service-info">
+              <div class="service-name">Pinecone</div>
+              <div class="service-desc">Vector store (semantic context / future expansion)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="layer storage-layer">
+          <div class="layer-title">💾 Storage</div>
+
+          <div class="service">
+            <div class="service-icon dynamodb">📊</div>
+            <div class="service-info">
+              <div class="service-name">DynamoDB Telemetry</div>
+              <div class="service-desc">Time-series (TTL configurable; dev uses shorter retention)</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon dynamodb">🚨</div>
+            <div class="service-info">
+              <div class="service-name">DynamoDB Alerts</div>
+              <div class="service-desc">Create / dedupe / escalate (Yellow→Orange→Red)</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon s3">📦</div>
+            <div class="service-info">
+              <div class="service-name">S3 (Lambda Artifacts)</div>
+              <div class="service-desc">Build outputs + deployment packaging</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon kms">🔐</div>
+            <div class="service-info">
+              <div class="service-name">KMS</div>
+              <div class="service-desc">Encryption at rest for AWS resources</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="layer pipeline-layer">
+          <div class="layer-title">🗂️ NSDI Hazard Data Ingestion</div>
+
+          <div class="service">
+            <div class="service-icon external">🛰️</div>
+            <div class="service-info">
+              <div class="service-name">NSDI ArcGIS REST API</div>
+              <div class="service-desc">Paginated hazard polygons (GeoJSON)</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon external">🧰</div>
+            <div class="service-info">
+              <div class="service-name">ndis_rag_pipeline.py</div>
+              <div class="service-desc">Centroid + geohash + normalisation + batch ingest</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon external">🧠</div>
+            <div class="service-info">
+              <div class="service-name">Embeddings (384-dim)</div>
+              <div class="service-desc">Sentence-transformers → Pinecone upserts</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="layer notification-layer">
+          <div class="layer-title">📢 Alerting</div>
+
+          <div class="service">
+            <div class="service-icon sns">📨</div>
+            <div class="service-info">
+              <div class="service-name">SNS Topic</div>
+              <div class="service-desc">Email notifications (dev) + extensible targets</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon sns">📧</div>
+            <div class="service-info">
+              <div class="service-name">Operator Email</div>
+              <div class="service-desc">Decision support for human-in-the-loop</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon sns">📱</div>
+            <div class="service-info">
+              <div class="service-name">SMS / Community (Future)</div>
+              <div class="service-desc">Pluggable alert channel</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="layer observability-layer">
+          <div class="layer-title">📈 Observability & Secrets</div>
+
+          <div class="service">
+            <div class="service-icon cloudwatch">📊</div>
+            <div class="service-info">
+              <div class="service-name">CloudWatch</div>
+              <div class="service-desc">Logs, metrics, alarms (Powertools-friendly)</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon secrets">🔑</div>
+            <div class="service-info">
+              <div class="service-name">Secrets Manager</div>
+              <div class="service-desc">Pinecone API key and other secrets</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon cloudwatch">💰</div>
+            <div class="service-info">
+              <div class="service-name">AWS Budgets</div>
+              <div class="service-desc">Dev guardrail (e.g., $15/month)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="layer iac-layer">
+          <div class="layer-title">🏗️ Infrastructure as Code</div>
+
+          <div class="service">
+            <div class="service-icon" style="background: linear-gradient(135deg, #7c4dff, #b388ff);">⚙️</div>
+            <div class="service-info">
+              <div class="service-name">Terragrunt</div>
+              <div class="service-desc">Environment orchestration + DRY modules</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon tofu">🔧</div>
+            <div class="service-info">
+              <div class="service-name">OpenTofu</div>
+              <div class="service-desc">Provisioning (Lambda, DynamoDB, SNS, API GW, etc.)</div>
+            </div>
+          </div>
+
+          <div class="service">
+            <div class="service-icon s3">🔒</div>
+            <div class="service-info">
+              <div class="service-name">S3 + DynamoDB Backend</div>
+              <div class="service-desc">State + locking</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="data-flow">
+      <div class="flow-title">🔄 End-to-End Flow (Current Build)</div>
+      <div class="flow-steps">
+        <div class="flow-step">1️⃣ Simulator / Devices publish</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">2️⃣ REST to API GW (/telemetry)</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">3️⃣ Telemetry Ingestor (validate + enrich)</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">4️⃣ DynamoDB Telemetry (TTL)</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">5️⃣ EventBridge schedule (15m)</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">6️⃣ Detector (risk + clusters)</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">7️⃣ RAG Query (zones) + Location</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">8️⃣ Bedrock (Claude reasoning)</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">9️⃣ Alerts table + SNS email</div>
+      </div>
+    </div>
+
+    <div class="alert-sample">
+      <div class="alert-header">
+        <div class="alert-icon">⚠️</div>
+        <div>
+          <div class="alert-title">Sample Alert Record (Detector Output)</div>
+          <div class="alert-subtitle">alert_id: <code>ALERT_YYYYMMDD_HHMMSS_CLUSTER_03</code> (example)</div>
+        </div>
+      </div>
+
+      <div class="alert-details">
+        <div class="alert-detail">
+          <div class="alert-detail-label">Level</div>
+          <div class="alert-detail-value" style="color:#fb923c;">🟠 Orange</div>
+        </div>
+        <div class="alert-detail">
+          <div class="alert-detail-label">Trigger</div>
+          <div class="alert-detail-value">Spatial correlation (3+ sensors)</div>
+        </div>
+        <div class="alert-detail">
+          <div class="alert-detail-label">Confidence</div>
+          <div class="alert-detail-value">0.80</div>
+        </div>
+        <div class="alert-detail">
+          <div class="alert-detail-label">Hazard Zone</div>
+          <div class="alert-detail-value">High / Very High context</div>
+        </div>
+        <div class="alert-detail">
+          <div class="alert-detail-label">Action</div>
+          <div class="alert-detail-value">Prepare evacuation</div>
+        </div>
+        <div class="alert-detail">
+          <div class="alert-detail-label">Delivery</div>
+          <div class="alert-detail-value">SNS → Email</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-section">
+      <div class="info-box">
+        <h3>🧩 Neuro-Symbolic Components (as implemented)</h3>
+        <ul class="info-list">
+          <li><span class="badge badge-pink">Neural</span> Weighted risk scoring (moisture/tilt/vibration/pore/safety)</li>
+          <li><span class="badge badge-pink">Neural</span> Spatial correlation + cluster detection (FusionAlgorithm)</li>
+          <li><span class="badge badge-orange">Hybrid</span> RAG hazard-zone validation (geohash4 + distance filter)</li>
+          <li><span class="badge badge-orange">Hybrid</span> Bedrock narrative + assessment (Orange/Red)</li>
+          <li><span class="badge badge-green">Symbolic</span> Escalation rules + dedupe logic (AlertManager)</li>
+          <li><span class="badge badge-green">Symbolic</span> High-risk thresholds (moisture/pore/tilt/safety)</li>
+        </ul>
+      </div>
+
+      <div class="info-box">
+        <h3>📊 Prototype Defaults (Dev)</h3>
+        <ul class="info-list">
+          <li><span class="badge badge-blue">Schedule</span> Detector: <code>rate(15 minutes)</code></li>
+          <li><span class="badge badge-orange">Threshold</span> Risk threshold: <code>0.6</code></li>
+          <li><span class="badge badge-green">Geo</span> Geohash precision: <code>4</code> (+ neighbour expansion)</li>
+          <li><span class="badge badge-gray">TTL</span> Telemetry retention: configurable (dev uses shorter TTL)</li>
+          <li><span class="badge badge-yellow">Cost</span> Budget guardrail: ~$15/month (dev)</li>
+          <li><span class="badge badge-purple">Data</span> NSDI zones: ~19k+ (example Badulla bounds)</li>
+        </ul>
+      </div>
+
+      <div class="info-box">
+        <h3>🎯 Calibration & Context</h3>
+        <ul class="info-list">
+          <li><span class="badge badge-orange">2016</span> Aranayake: tilt-rate precursor observed</li>
+          <li><span class="badge badge-orange">2014</span> Meeriyabedda: elevated vibration baseline</li>
+          <li><span class="badge badge-green">NDIS</span> Hazard-zone attributes enrich telemetry + reasoning</li>
+          <li><span class="badge badge-blue">Ops</span> Human-in-the-loop: alerts go to operators first</li>
+          <li><span class="badge badge-gray">Future</span> Extra data sources (rainfall, satellite) are out-of-scope for v2</li>
+        </ul>
+      </div>
+    </div>
+
+    <footer>OpenLEWS Prototype v2 • Public reference architecture • AWS ap-southeast-2 • December 2025</footer>
+  </div>
+</body>
+</html>
