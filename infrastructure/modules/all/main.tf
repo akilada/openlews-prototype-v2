@@ -128,3 +128,18 @@ module "lambda_detector" {
     module.lambda_telemetry_ingestor
   ]
 }
+
+module "alerts_emailer" {
+  source = "../notifications"
+
+  project_name = var.project_name
+  environment  = var.environment
+  region       = var.aws_region
+
+  sns_topic_arn   = module.lambda_detector.sns_topic_arn
+  ses_from_email  = var.ses_from_email
+  ses_to_emails   = var.ses_to_emails
+  timezone        = var.timezone
+
+  tags = var.tags
+}

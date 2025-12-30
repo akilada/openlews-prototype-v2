@@ -85,6 +85,11 @@ locals {
   # Bedrock
   enable_bedrock_logging  = false
   
+    # Notification
+  ses_from_email  = ""
+  ses_to_emails   = [""]
+  timezone        = "Asia/Colombo"
+
   # Tags / ownership
   owner_email = get_env("OWNER_EMAIL", " ")
 }

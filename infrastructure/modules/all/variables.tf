@@ -58,3 +58,8 @@ variable "schedule_expression" { type = string }
 
 # Bedrock
 variable "enable_bedrock_logging" { type = bool }
+
+# Notification
+variable "ses_from_email" { type = string }
+variable "ses_to_emails" { type = list(string) }
+variable "timezone" { type = string }
