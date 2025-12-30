@@ -10,7 +10,6 @@ Historical Facts:
 - Expected: Red alert by hour 62 (6h warning)
 """
 
-import json
 import os
 import sys
 
@@ -128,7 +127,7 @@ def test_aranayake_replay():
     print(f"  First Yellow Alert: Hour {first_yellow or 'NEVER'}")
     print(f"  First Orange Alert: Hour {first_orange or 'NEVER'}")
     print(f"  First Red Alert:    Hour {first_red or 'NEVER'}")
-    print(f"  Actual Failure:     Hour 68")
+    print("  Actual Failure:     Hour 68")
     print("-"*60)
     
     # Assertions

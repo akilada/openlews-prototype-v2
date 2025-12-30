@@ -90,10 +90,10 @@ inputs = {
   schedule_expression = local.env_cfg.locals.schedule_expression
 
   # Notification
-  ses_from_email  = local.env_cfg.locals.ses_from_email
-  ses_to_emails   = local.env_cfg.locals.ses_to_emails
-  timezone        = local.env_cfg.locals.timezone
-  
+  ses_from_email = local.env_cfg.locals.ses_from_email
+  ses_to_emails  = local.env_cfg.locals.ses_to_emails
+  timezone       = local.env_cfg.locals.timezone
+
   # Bedrock
   enable_bedrock_logging = local.env_cfg.locals.enable_bedrock_logging
 }

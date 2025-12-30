@@ -14,7 +14,7 @@ variable "environment" {
   type        = string
 }
 
-variable "aws_region"  { type = string }
+variable "aws_region" { type = string }
 variable "name_prefix" { type = string }
 
 variable "monthly_budget_usd" {
@@ -31,13 +31,13 @@ variable "alert_email" {
 variable "alert_threshold_1" {
   description = "First alert threshold (USD)"
   type        = number
-  default     = 7.5  # 50% of $7.5
+  default     = 7.5 # 50% of $7.5
 }
 
 variable "alert_threshold_2" {
   description = "Second alert threshold (USD)"
   type        = number
-  default     = 12  # 80% of $12
+  default     = 12 # 80% of $12
 }
 
 variable "tags" {
@@ -147,7 +147,7 @@ resource "aws_cloudwatch_metric_alarm" "estimated_charges" {
   evaluation_periods  = "1"
   metric_name         = "EstimatedCharges"
   namespace           = "AWS/Billing"
-  period              = "21600"  # 6 hours
+  period              = "21600" # 6 hours
   statistic           = "Maximum"
   threshold           = var.alert_threshold_1
   alarm_description   = "Alert when estimated monthly charges exceed ${var.alert_threshold_1} USD"

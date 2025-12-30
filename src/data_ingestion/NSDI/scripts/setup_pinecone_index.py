@@ -8,7 +8,7 @@ Run this BEFORE running the main NSDI ingestion pipeline.
 import os
 import sys
 import time
-from typing import Any, Optional
+from typing import Any
 
 try:
     from dotenv import load_dotenv

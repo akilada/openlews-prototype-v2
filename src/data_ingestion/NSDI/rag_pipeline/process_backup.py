@@ -33,7 +33,7 @@ import os
 import sys
 import time
 import argparse
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional, Tuple
 
 import boto3
 from dotenv import load_dotenv
@@ -350,7 +350,7 @@ def main():
     max_size = max(sizes) if sizes else 0
     oversized = sum(1 for s in sizes if s > DYNAMODB_ITEM_LIMIT_BYTES)
 
-    print(f"\n📏 Item Size Statistics:")
+    print("\n📏 Item Size Statistics:")
     print(f"   Average: {avg_size / 1024:.1f}KB")
     print(f"   Maximum: {max_size / 1024:.1f}KB")
     print(f"   Oversized (>400KB): {oversized}" if oversized else "   ✓ All items within 400KB limit")
@@ -377,7 +377,7 @@ def main():
     print("\n" + "=" * 70)
     print("✅ Processing Complete!")
     print("=" * 70)
-    print(f"\n📊 Summary:")
+    print("\n📊 Summary:")
     print(f"  - Input features: {len(features):,}")
     print(f"  - Processed items: {len(processed_items):,}")
     print(f"  - Processing errors: {len(errors)}")

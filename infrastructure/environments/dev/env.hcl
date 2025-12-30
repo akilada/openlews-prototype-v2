@@ -15,9 +15,9 @@ locals {
 
   # Cost Limits
   monthly_budget_usd = 15 # Hard limit
-  alert_threshold_1 = 50
-  alert_threshold_2 = 80
-  alert_threshold_3 = 100
+  alert_threshold_1  = 50
+  alert_threshold_2  = 80
+  alert_threshold_3  = 100
 
   # Resource Configuration
   lambda_memory_mb       = 256
@@ -59,33 +59,33 @@ locals {
   rotation_days = 90
 
   # Ingestor Lambda
-  
+
   # DynamoDB Tables
   geohash_index_name = "GeoHashIndex"
   geohash_precision  = 4
 
   # Table creation
   create_telemetry_table = true
-  
+
   # Feature flags
   enable_ndis_enrichment = true
   enable_eventbridge     = true
-  
+
   # API Gateway Authentication & Rate Limiting
   enable_api_key_auth = true
   api_quota_limit     = 100000
   api_burst_limit     = 100
   api_rate_limit      = 50
-  
+
   # Lambda Detector
   risk_threshold      = 0.6
   bedrock_model_id    = "anthropic.claude-3-haiku-20240307-v1:0"
   schedule_expression = "rate(15 minutes)"
-  
+
   # Bedrock
   enable_bedrock_logging = false
-  
-    # Notification
+
+  # Notification
   ses_from_email = ""
   ses_to_emails  = [""]
   timezone       = "Asia/Colombo"

@@ -91,7 +91,7 @@ class RAGClient:
                 logger.warning("No hazard zone found in RAG response")
                 return self._get_default_context()
                 
-        except Exception as e:
+        except Exception:
             logger.exception("Failed to query RAG Lambda")
             return self._get_default_context()
     

@@ -11,7 +11,7 @@ import json
 import os
 import random
 import time
-from typing import Dict, Any, Optional, List
+from typing import Dict, Optional, List
 
 import boto3
 from botocore.config import Config

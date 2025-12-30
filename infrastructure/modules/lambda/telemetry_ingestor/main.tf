@@ -116,7 +116,7 @@ variable "tags" {
 # Local variables
 locals {
   function_name = "${var.project_name}-${var.environment}-ingestor"
-  
+
   common_tags = merge(
     var.tags,
     {
@@ -131,13 +131,13 @@ locals {
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   name              = "/aws/lambda/${local.function_name}"
   retention_in_days = var.cloudwatch_log_retention_days
-  
+
   tags = local.common_tags
 }
 
 # IAM Role for Lambda
 resource "aws_iam_role" "lambda_role" {
-  name               = "${local.function_name}-role"
+  name = "${local.function_name}-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -150,7 +150,7 @@ resource "aws_iam_role" "lambda_role" {
       }
     ]
   })
-  
+
   tags = local.common_tags
 }
 
@@ -158,7 +158,7 @@ resource "aws_iam_role" "lambda_role" {
 resource "aws_iam_role_policy" "lambda_policy" {
   name = "${local.function_name}-policy"
   role = aws_iam_role.lambda_role.id
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -221,33 +221,33 @@ resource "aws_iam_role_policy" "lambda_policy" {
 
 # Lambda Function
 resource "aws_lambda_function" "ingestor" {
-  filename          = "${path.module}/lambda_package.zip"
-  source_code_hash  = fileexists("${path.module}/lambda_package.zip") ? filebase64sha256("${path.module}/lambda_package.zip") : null
-  function_name     = local.function_name
-  role              = aws_iam_role.lambda_role.arn
-  handler           = "lambda_function.lambda_handler"
-  runtime           = "python3.11"
-  timeout           = var.lambda_timeout_seconds
-  memory_size       = var.lambda_memory_mb
-  
+  filename         = "${path.module}/lambda_package.zip"
+  source_code_hash = fileexists("${path.module}/lambda_package.zip") ? filebase64sha256("${path.module}/lambda_package.zip") : null
+  function_name    = local.function_name
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "lambda_function.lambda_handler"
+  runtime          = "python3.11"
+  timeout          = var.lambda_timeout_seconds
+  memory_size      = var.lambda_memory_mb
+
   environment {
     variables = {
-      TELEMETRY_TABLE          = var.telemetry_table_name
-      HAZARD_ZONES_TABLE       = var.hazard_zones_table_name
-      EVENT_BUS                = "default"
-      ENABLE_NDIS_ENRICHMENT   = var.enable_ndis_enrichment ? "true" : "false"
-      ENABLE_EVENTBRIDGE       = var.enable_eventbridge ? "true" : "false"
-      LOG_LEVEL                = var.environment == "prod" ? "INFO" : "DEBUG"
-      HAZARD_GEOHASH_INDEX     = var.geohash_index_name
-      HAZARD_GEOHASH_KEY       = "geohash"
+      TELEMETRY_TABLE        = var.telemetry_table_name
+      HAZARD_ZONES_TABLE     = var.hazard_zones_table_name
+      EVENT_BUS              = "default"
+      ENABLE_NDIS_ENRICHMENT = var.enable_ndis_enrichment ? "true" : "false"
+      ENABLE_EVENTBRIDGE     = var.enable_eventbridge ? "true" : "false"
+      LOG_LEVEL              = var.environment == "prod" ? "INFO" : "DEBUG"
+      HAZARD_GEOHASH_INDEX   = var.geohash_index_name
+      HAZARD_GEOHASH_KEY     = "geohash"
     }
   }
-  
+
   depends_on = [
     aws_cloudwatch_log_group.lambda_logs,
     aws_iam_role_policy.lambda_policy
   ]
-  
+
   tags = local.common_tags
 }
 

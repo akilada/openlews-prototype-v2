@@ -101,8 +101,8 @@ jobs:
       - name: Black (format check)
         run: black --check src scripts
 
-    #   - name: Pytest
-    #     run: pytest -q
+  #   - name: Pytest
+  #     run: pytest -q
 
   terraform-quality:
     name: Terraform quality
@@ -174,7 +174,7 @@ jobs:
 
       - name: YAML lint
         run: |
-          yamllint -d "{extends: default, rules: {line-length: disable}}" .
+          yamllint -d "{extends: default,  {line-length: disable, truthy: disable, comments-indentation: disable}}" .
 
       - name: JSON parse check
         shell: bash

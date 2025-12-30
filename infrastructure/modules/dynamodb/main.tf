@@ -58,9 +58,9 @@ data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "dynamodb_kms_key_policy" {
   statement {
-    sid     = "EnableRootPermissions"
-    effect  = "Allow"
-    actions = ["kms:*"]
+    sid       = "EnableRootPermissions"
+    effect    = "Allow"
+    actions   = ["kms:*"]
     resources = ["*"]
 
     principals {

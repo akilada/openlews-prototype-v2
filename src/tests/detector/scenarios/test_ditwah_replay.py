@@ -142,7 +142,7 @@ def test_ditwah_replay():
     assert red_day - yellow_day >= 2, \
         f"❌ FAILED: Escalation too rapid ({red_day - yellow_day} days)"
     
-    print(f"\n✅ SUCCESS: Proper escalation path verified")
+    print("\n✅ SUCCESS: Proper escalation path verified")
     print(f"   Yellow (Day {yellow_day}) → Orange (Day {orange_day}) → Red (Day {red_day})")
     print(f"   Total warning period: {red_day - yellow_day} days\n")
     

@@ -62,12 +62,12 @@ jobs:
           sarif_file: trivy-iac.sarif
           category: trivy-iac
 
-      # - name: Enforce HIGH/CRITICAL (fail build)
-      #   uses: aquasecurity/trivy-action@0.33.1
-      #   with:
-      #     scan-type: config
-      #     scan-ref: infrastructure
-      #     format: table
-      #     severity: HIGH,CRITICAL
-      #     exit-code: "1"
-      #     trivy-config: .trivy.yaml
+    # - name: Enforce HIGH/CRITICAL (fail build)
+    #   uses: aquasecurity/trivy-action@0.33.1
+    #   with:
+    #     scan-type: config
+    #     scan-ref: infrastructure
+    #     format: table
+    #     severity: HIGH,CRITICAL
+    #     exit-code: "1"
+    #     trivy-config: .trivy.yaml

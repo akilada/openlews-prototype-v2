@@ -30,7 +30,6 @@ import os
 import sys
 import argparse
 from typing import List, Dict, Optional
-from datetime import datetime
 import boto3
 
 # Optional imports
@@ -169,7 +168,7 @@ class EmbeddingGenerator:
                 from sentence_transformers import SentenceTransformer
                 print(f"  Loading embedding model: {model}...")
                 self.encoder = SentenceTransformer(model)
-                print(f"  ✅ Loaded local embedding model")
+                print("  ✅ Loaded local embedding model")
             except ImportError:
                 print("  ⚠️  sentence-transformers not installed. Run: pip install sentence-transformers")
                 self.method = "none"
@@ -401,7 +400,7 @@ def main():
     
     # Save raw data backup
     if not args.skip_backup:
-        print(f"\n💾 Saving raw GeoJSON backup...")
+        print("\n💾 Saving raw GeoJSON backup...")
         backup_filename = "ndis_raw_backup.json"
         with open(backup_filename, "w") as f:
             json.dump({"type": "FeatureCollection", "features": features}, f)
@@ -426,7 +425,7 @@ def main():
     
     if processed_items:
         sample = processed_items[0]
-        print(f"\n📋 Sample processed item:")
+        print("\n📋 Sample processed item:")
         print(f"   zone_id: {sample['zone_id']}")
         print(f"   level: {sample['level']}")
         print(f"   hazard_level: {sample['hazard_level']}")
@@ -461,7 +460,7 @@ def main():
         valid_count = sum(1 for e in embeddings if e is not None)
         print(f"  🔍 Embeddings: {valid_count:,} vectors")
     if args.dry_run:
-        print(f"  ⚠️  DRY RUN - No data was written")
+        print("  ⚠️  DRY RUN - No data was written")
     
     print("\n📋 Next Steps:")
     print("  1. Verify data in DynamoDB:")

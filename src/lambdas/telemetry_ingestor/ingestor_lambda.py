@@ -10,7 +10,6 @@ from typing import Dict, List, Optional, Tuple
 from decimal import Decimal
 import logging
 
-from decimal import Decimal
 from boto3.dynamodb.conditions import Key
 
 logger = logging.getLogger()

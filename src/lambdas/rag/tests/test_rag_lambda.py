@@ -8,7 +8,6 @@ Tests the Lambda both locally and deployed to AWS
 import json
 import os
 import sys
-from typing import Dict
 
 # For local testing
 sys.path.insert(0, os.path.dirname(__file__))

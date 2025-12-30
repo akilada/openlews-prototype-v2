@@ -11,7 +11,7 @@ References:
 """
 
 import math
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from aws_lambda_powertools import Logger
 
 logger = Logger(child=True)
