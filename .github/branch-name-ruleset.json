@@ -1,0 +1,24 @@
+{
+  "name": "Enforce Branch Naming",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": [
+        "refs/heads/*"
+      ],
+      "exclude": [
+        "refs/heads/main" 
+      ]
+    }
+  },
+  "rules": [
+    {
+      "type": "creation",
+      "parameters": {
+        "operator": "regex",
+        "pattern": "^(feature|fix|hotfix)\/.*"
+      }
+    }
+  ]
+}
