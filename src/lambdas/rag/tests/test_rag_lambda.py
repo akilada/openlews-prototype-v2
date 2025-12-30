@@ -28,10 +28,12 @@ def test_local():
     # Load Pinecone API key from .env if available
     try:
         from dotenv import load_dotenv
+    except ImportError:
+        load_dotenv = None
+
+    if load_dotenv is not None:
         load_dotenv()
-        os.environ['PINECONE_API_KEY'] = os.getenv('PINECONE_API_KEY', '')
-    except:
-        pass
+        os.environ["PINECONE_API_KEY"] = os.getenv("PINECONE_API_KEY", "")
     
     if not os.environ.get('PINECONE_API_KEY'):
         print("⚠️  Warning: PINECONE_API_KEY not set")

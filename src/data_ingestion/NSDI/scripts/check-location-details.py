@@ -39,9 +39,14 @@ for feat in features:
     _, ds       = pick(props, "ds_division", "ds", "dsdivision", "ds_name")
     _, gn       = pick(props, "gn_division", "gn", "gndivision", "gn_name")
 
-    if district in (None, "", "Unknown"): missing["district"] += 1
-    if ds       in (None, "", "Unknown"): missing["ds"] += 1
-    if gn       in (None, "", "Unknown"): missing["gn"] += 1
+    if district in (None, "", "Unknown"):
+        missing["district"] += 1
+
+    if ds in (None, "", "Unknown"): 
+        missing["ds"] += 1
+
+    if gn in (None, "", "Unknown"): 
+        missing["gn"] += 1
 
 print("\nTop candidate keys (you can eyeball what’s available):")
 for k, c in key_counts.most_common(30):

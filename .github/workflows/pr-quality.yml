@@ -174,7 +174,7 @@ jobs:
 
       - name: YAML lint
         run: |
-          yamllint -d "{extends: default,  {line-length: disable, truthy: disable, comments-indentation: disable}}" .
+          yamllint -d "{extends: default, rules: {line-length: disable, truthy: disable, comments-indentation: disable}}" .
 
       - name: JSON parse check
         shell: bash

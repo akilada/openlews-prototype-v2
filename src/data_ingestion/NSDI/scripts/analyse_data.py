@@ -187,31 +187,22 @@ def test_specific_queries():
 
 
 def main():
-    print("="*60)
+    print("=" * 60)
     print("🔬 NDIS Hazard Zone Data Analysis")
-    print("="*60)
-    
-    # Analyze DynamoDB
+    print("=" * 60)
+
     db_levels = analyze_dynamodb()
-    
-    # Analyze Pinecone
     pc_levels = analyze_pinecone()
-    
-    # Find Very High zones
+
+    print("\n" + "=" * 60)
+    print("📌 Summary")
+    print("=" * 60)
+    print(f"DynamoDB distinct levels: {len(db_levels)}")
+    print(f"Pinecone distinct levels (sample): {len(pc_levels)}")
+
     find_very_high_zones()
-    
-    # Test queries
     test_specific_queries()
-    
-    print("\n" + "="*60)
+
+    print("\n" + "=" * 60)
     print("✅ Analysis Complete")
-    print("="*60)
-
-
-if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(f"\n❌ Error: {e}")
-        import traceback
-        traceback.print_exc()
+    print("=" * 60)

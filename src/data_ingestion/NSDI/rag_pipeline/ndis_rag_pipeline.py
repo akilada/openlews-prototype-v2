@@ -379,12 +379,19 @@ def main():
     bounds = None
     if args.filter_bounds:
         try:
-            bounds = tuple(map(float, args.filter_bounds.split(',')))
+            parts = [p.strip() for p in args.filter_bounds.split(",")]
+            bounds = tuple(float(p) for p in parts)
             if len(bounds) != 4:
-                raise ValueError()
+                raise ValueError("Expected 4 comma-separated numbers")
+
+            min_lat, max_lat, min_lon, max_lon = bounds
+            if min_lat > max_lat or min_lon > max_lon:
+                raise ValueError("Min values must be <= max values")
+
             print(f"  🗺️  Filtering by bounds: {bounds}")
-        except:
+        except ValueError as e:
             print("❌ Invalid bounds format. Use: min_lat,max_lat,min_lon,max_lon")
+            print(f"   Details: {e}")
             sys.exit(1)
     
     downloader = NSDIDownloader(NSDI_BASE_URL)
