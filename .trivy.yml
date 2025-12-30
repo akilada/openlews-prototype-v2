@@ -1,0 +1,13 @@
+# .trivy.yaml
+
+rego:
+  skip-check-update: true
+
+misconfiguration:
+  terraform:
+    exclude-downloaded-modules: true
+
+scan:
+  skip-dirs:
+    - .terraform
+    - .terragrunt-cache
