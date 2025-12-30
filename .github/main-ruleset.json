@@ -1,46 +1,69 @@
 {
+  "id": 11456125,
   "name": "Strict Main Protection",
   "target": "branch",
+  "source_type": "Repository",
+  "source": "akilada/openlews-prototype-v2",
   "enforcement": "active",
   "conditions": {
     "ref_name": {
-      "include": ["refs/heads/main"],
-      "exclude": []
+      "exclude": [],
+      "include": [
+        "refs/heads/main"
+      ]
     }
   },
   "rules": [
-    { "type": "deletion" },
-    { "type": "non_fast_forward" },
-
+    {
+      "type": "deletion"
+    },
+    {
+      "type": "non_fast_forward"
+    },
     {
       "type": "pull_request",
       "parameters": {
         "required_approving_review_count": 1,
         "dismiss_stale_reviews_on_push": true,
+        "required_reviewers": [],
         "require_code_owner_review": true,
         "require_last_push_approval": false,
-        "required_review_thread_resolution": true
+        "required_review_thread_resolution": true,
+        "allowed_merge_methods": [
+          "merge",
+          "squash",
+          "rebase"
+        ]
       }
     },
-
     {
       "type": "required_status_checks",
       "parameters": {
         "strict_required_status_checks_policy": true,
+        "do_not_enforce_on_create": false,
         "required_status_checks": [
-          { "context": "PR Quality & Format / Python quality" },
-          { "context": "PR Quality & Format / Terraform quality" },
-          { "context": "PR Quality & Format / YAML+JSON lint" },
-          { "context": "PR Quality & Format / Branch naming" },
-          { "context": "CodeQL Security Scan / Analyze (python)" }
+          {
+            "context": "PR Quality & Format / Python quality"
+          },
+          {
+            "context": "PR Quality & Format / Terraform quality"
+          },
+          {
+            "context": "PR Quality & Format / YAML+JSON lint"
+          },
+          {
+            "context": "PR Quality & Format / Branch naming"
+          },
+          {
+            "context": "CodeQL Security Scan / Analyze (python)"
+          }
         ]
       }
     },
-
     {
-      "type": "required_code_scanning",
+      "type": "code_scanning",
       "parameters": {
-        "required_code_scanning_tools": [
+        "code_scanning_tools": [
           {
             "tool": "CodeQL",
             "security_alerts_threshold": "high_or_higher",
@@ -48,6 +71,19 @@
           }
         ]
       }
+    },
+    {
+      "type": "code_quality",
+      "parameters": {
+        "severity": "errors"
+      }
+    }
+  ],
+  "bypass_actors": [
+    {
+      "actor_id": 5,
+      "actor_type": "RepositoryRole",
+      "bypass_mode": "always"
     }
   ]
 }
