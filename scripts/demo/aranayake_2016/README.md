@@ -82,8 +82,18 @@ With 15m spacing in a 3×3 quincunx, the maximum diagonal distance is ~37m, ensu
 
 ## Usage
 
-### Basic Usage
 
+### Prerequisite 
+
+Ensure Aranayake Geo bounds for Aranayake loaded to pinecone and DynamoDB.
+
+```bash
+cd /src/data_ingestion/NSDI
+pip install -r requirements.txt
+python process_backup.py --filter-bounds 6.8,7.2,80.3,81.2 
+````
+
+### Basic Usage 
 ```bash
 # Run full demo (all 6 steps)
 python demo_aranayake_2016.py

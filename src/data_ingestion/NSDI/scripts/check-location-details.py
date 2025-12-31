@@ -12,7 +12,7 @@ Env vars (optional):
   HAZARD_TABLE_NAME
 """
 
-path = "nsdi_raw_backup.json"
+path = "../rag_pipeline/nsdi_raw_backup.json"
 with open(path, "r", encoding="utf-8") as f:
     data = json.load(f)
 

@@ -91,5 +91,5 @@ locals {
   timezone       = "Asia/Colombo"
 
   # Tags / ownership
-  owner_email = get_env("OWNER_EMAIL", " ")
+  owner_email = get_env("OWNER_EMAIL", "")
 }
