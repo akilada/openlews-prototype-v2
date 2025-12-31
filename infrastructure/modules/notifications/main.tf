@@ -88,7 +88,6 @@ resource "aws_lambda_function" "sns_to_ses" {
 
   environment {
     variables = {
-      AWS_REGION       = var.region
       SES_FROM_EMAIL   = var.ses_from_email
       SES_TO_EMAILS    = join(",", var.ses_to_emails)
       TIMEZONE         = var.timezone

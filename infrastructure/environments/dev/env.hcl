@@ -86,10 +86,10 @@ locals {
   enable_bedrock_logging = false
 
   # Notification
-  ses_from_email = ""
-  ses_to_emails  = [""]
+  ses_from_email = "<PLACE_HOLDER>"
+  ses_to_emails  = ["<PLACE_HOLDER>"]
   timezone       = "Asia/Colombo"
 
   # Tags / ownership
-  owner_email = get_env("OWNER_EMAIL", " ")
+  owner_email = get_env("OWNER_EMAIL", "<PLACE_HOLDER>")
 }

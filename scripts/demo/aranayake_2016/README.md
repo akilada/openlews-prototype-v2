@@ -14,12 +14,14 @@ This demo script simulates the catastrophic Aranayake landslide scenario using t
 |-----------|-------|
 | **Date** | May 17, 2016 |
 | **Location** | Kegalle District, Sabaragamuwa Province |
-| **Crown Coordinates** | 7.1476°N, 80.4546°E (Samasariya Hill) |
-| **Toe Coordinates** | 6.9639°N, 80.4209°E (Pallebage Village) |
+| **Crown Coordinates** | 7.1554°N, 80.4306°E (Samasariya Hill - source) |
+| **Toe Coordinates** | 7.1690°N, 80.4300°E (Pallebage village area) |
 | **Rainfall** | 446.5mm over 72 hours |
-| **Runout Distance** | ~2km |
+| **Runout Distance** | ~1.5km (NORTH down NE-facing slope) |
+| **Flow Direction** | Northward (down NE-facing slope toward villages) |
 | **Casualties** | 127 dead/missing |
 | **Villages Destroyed** | Siripura, Elangapitiya, Pallebage |
+| **Source** | [ICL Report](https://www.landslides.org/report/aranayaka-landslide/) |
 
 ---
 
@@ -82,6 +84,16 @@ With 15m spacing in a 3×3 quincunx, the maximum diagonal distance is ~37m, ensu
 
 ## Usage
 
+### Prerequisite
+
+Ensure Kegalle and Badulla Geohashes are loaded into Pinecone Index and Hazard Zones DynamoDB tables.
+
+```bash
+cd /src/data_ingestion/NSDI
+pip install -r requirements.txt
+python process_backup.py --filter-bounds 6.8,7.5,80.2,81.2 -embeddings --pinecone
+```
+
 ### Basic Usage
 
 ```bash
@@ -121,7 +133,7 @@ The script reads from environment variables (with defaults):
 | `AWS_REGION` | `ap-southeast-2` | AWS region |
 | `TELEMETRY_TABLE` | `openlews-dev-telemetry` | Telemetry DynamoDB table |
 | `ALERTS_TABLE` | `openlews-dev-alerts` | Alerts DynamoDB table |
-| `HAZARD_ZONES_TABLE` | `openlews-dev-hazard-zones` | NSDI hazard zones table |
+| `HAZARD_ZONES_TABLE` | `openlews-dev-hazard-zones` | NDIS hazard zones table |
 | `DETECTOR_LAMBDA` | `openlews-dev-detector` | Detector Lambda function |
 | `RAG_LAMBDA` | `openlews-dev-rag-query` | RAG Query Lambda function |
 
@@ -270,7 +282,7 @@ pip install boto3
 - [Detection Engine](src/lambdas/detector/README.md)
 - [RAG Query Engine](src/lambdas/rag/README.md)
 - [Telemetry Ingestor](src/lambdas/telemetry_ingestor/README.md)
-- [NSDI Data Ingestion](src/data_ingestion/NSDI/README.md)
+- [NDIS Data Ingestion](src/data_ingestion/NSDI/README.md)
 
 ---
 
