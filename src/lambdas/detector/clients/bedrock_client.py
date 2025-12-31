@@ -396,8 +396,8 @@ Keep it concise and actionable."""
                 }
 
                 logger.warning(
-                    "Bedrock call failed",
-                    extra={"attempt": attempt, "code": code, "message": msg},
+                    f"Bedrock call failed: {msg}",
+                    extra={"attempt": attempt, "error_code": code, "retryable": retryable},
                 )
 
                 if not retryable or attempt == max_attempts:
@@ -409,7 +409,7 @@ Keep it concise and actionable."""
             except Exception as e:
                 last_err = e
                 logger.exception(
-                    "Bedrock call failed with unexpected error",
+                    f"Bedrock call failed with unexpected error: {e}",
                     extra={"attempt": attempt},
                 )
                 if attempt == max_attempts:

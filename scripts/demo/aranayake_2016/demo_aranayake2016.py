@@ -3,17 +3,17 @@
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                    ARANAYAKE 2016 LANDSLIDE DEMO SCRIPT                      ║
 ║                                                                              ║
-║  Simulates the May 17, 2016 Aranayake disaster scenario using OpenLEWS       ║
-║  IoT-LLM framework with hybrid Quincunx + Vertical sensor placement.         ║
+║  Simulates the May 17, 2016 Aranayake disaster scenario using OpenLEWS      ║
+║  IoT-LLM framework with hybrid Quincunx + Vertical sensor placement.        ║
 ║                                                                              ║
 ║  Historical Facts:                                                           ║
 ║  - Location: Kegalle District, Sabaragamuwa Province                         ║
-║  - Crown: 7.1476°N, 80.4546°E (Samasariya/Elangapitiya Hill)                 ║
-║  - Rainfall: 446.5mm over 72 hours (May 14-17, 2016)                         ║
+║  - Crown: 7.1476°N, 80.4546°E (Samasariya/Elangapitiya Hill)                ║
+║  - Rainfall: 446.5mm over 72 hours (May 14-17, 2016)                        ║
 ║  - Casualties: 127 dead/missing                                              ║
-║  - Runout: ~2km debris flow destroying Siripura, Elangapitiya, Pallebage     ║
+║  - Runout: ~2km debris flow destroying Siripura, Elangapitiya, Pallebage    ║
 ║                                                                              ║
-║  Sensor Topology: 36 sensors in Hybrid (Quincunx + Vertical) arrangement     ║
+║  Sensor Topology: 36 sensors in Hybrid (Quincunx + Vertical) arrangement    ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
 
@@ -92,10 +92,16 @@ class DemoConfig:
     ingestor_api_token: str = field(default_factory=lambda: os.getenv("INGESTOR_API_TOKEN", ""))
     
     # Aranayake coordinates
-    crown_lat: float = 7.1476
-    crown_lon: float = 80.4546
-    toe_lat: float = 6.9639  # Pallebage village
-    toe_lon: float = 80.4209
+    # Official Aranayake landslide coordinates from ICL/JICA reports
+    # Source: https://www.landslides.org/report/aranayaka-landslide/
+    # Crown: 7°9'19.22"N, 80°25'50.06"E (Samasariya Hill - source area)
+    crown_lat: float = 7.1554
+    crown_lon: float = 80.4306
+    # Toe: ~1.5km NORTH of crown (Siripura/Pallebage/Elangapitiya villages)
+    # The NE-facing slope means debris flowed NORTHWARD down the slope
+    # Pallebage village: 7.1687°N, 80.4304°E (from Google Maps)
+    toe_lat: float = 7.1690
+    toe_lon: float = 80.4300
     
     # Demo settings
     sensor_prefix: str = "ARANAYAKE_"
@@ -619,7 +625,17 @@ class AWSClients:
         self.region = config.region
         
         self.dynamodb = boto3.resource("dynamodb", region_name=self.region)
-        self.lambda_client = boto3.client("lambda", region_name=self.region)
+        
+        # Configure Lambda client with extended timeout for long-running detector
+        # The detector Lambda can take 60-120 seconds when processing multiple clusters
+        from botocore.config import Config
+        lambda_config = Config(
+            read_timeout=180,  # 3 minutes
+            connect_timeout=10,
+            retries={'max_attempts': 2}
+        )
+        self.lambda_client = boto3.client("lambda", region_name=self.region, config=lambda_config)
+        
         self.logs_client = boto3.client("logs", region_name=self.region)
         self.sns_client = boto3.client("sns", region_name=self.region)
         
@@ -990,17 +1006,57 @@ class AranayakeDemo:
             )
             elapsed = time.time() - start
             
-            payload = json.loads(response["Payload"].read())
+            # Read the raw payload
+            raw_payload = response["Payload"].read()
             status_code = response.get("StatusCode", 500)
+            function_error = response.get("FunctionError")
+            
+            if self.config.verbose:
+                Console.info(f"Lambda StatusCode: {status_code}")
+                if function_error:
+                    Console.warning(f"FunctionError: {function_error}")
+            
+            # Parse the payload
+            try:
+                payload = json.loads(raw_payload)
+            except json.JSONDecodeError as e:
+                Console.error(f"Failed to parse Lambda response: {e}")
+                Console.data("Raw Response", raw_payload.decode('utf-8')[:500])
+                return
+            
+            # Check for Lambda-level errors
+            if function_error:
+                Console.error(f"Lambda execution error: {function_error}")
+                error_msg = payload.get("errorMessage", str(payload))
+                Console.data("Error", error_msg[:200])
+                return
             
             if status_code == 200:
                 Console.success(f"Detector completed in {elapsed:.2f}s")
                 
-                # Parse response body
-                if isinstance(payload.get("body"), str):
-                    body = json.loads(payload["body"])
+                # Parse response body - handle multiple formats
+                body = None
+                
+                # Format 1: {"statusCode": 200, "body": "{...json string...}"}
+                if "body" in payload:
+                    if isinstance(payload["body"], str):
+                        try:
+                            body = json.loads(payload["body"])
+                        except json.JSONDecodeError:
+                            body = {"raw": payload["body"]}
+                    else:
+                        body = payload["body"]
+                # Format 2: Direct response {"status": "success", ...}
+                elif "status" in payload:
+                    body = payload
+                # Format 3: Just the payload itself
                 else:
-                    body = payload.get("body", payload)
+                    body = payload
+                
+                # Debug: show what we parsed
+                if self.config.verbose and body.get("status") == "error":
+                    Console.warning("Lambda returned error status in body")
+                    Console.data("Error Details", body.get("error", "unknown")[:200])
                 
                 Console.subheader("Detector Results")
                 Console.data("Status", body.get("status", "unknown"))
@@ -1016,13 +1072,19 @@ class AranayakeDemo:
                 
                 if body.get("alerts_created", 0) > 0:
                     Console.success(f"🚨 {body.get('alerts_created')} new alert(s) created!")
+                
+                # Store for summary
+                self._detector_results = body
             else:
                 Console.error(f"Detector failed with status {status_code}")
                 if self.config.verbose:
-                    Console.data("Response", json.dumps(payload, indent=2))
+                    Console.data("Response", json.dumps(payload, indent=2)[:500])
                     
         except Exception as e:
             Console.error(f"Failed to invoke detector: {e}")
+            if self.config.verbose:
+                import traceback
+                traceback.print_exc()
     
     def _step_5_check_alerts(self) -> None:
         """Check alerts table for generated alerts."""
