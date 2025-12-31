@@ -1,5 +1,5 @@
 variable "environment" { type = string }
-variable "aws_region"  { type = string }
+variable "aws_region" { type = string }
 variable "name_prefix" { type = string }
 variable "project_name" { type = string }
 
@@ -10,17 +10,17 @@ variable "tags" {
 
 # Budgets
 variable "monthly_budget_usd" { type = number }
-variable "alert_email"        { type = string }
+variable "alert_email" { type = string }
 
 # DynamoDB
-variable "ttl_days"                      { type = number }
+variable "ttl_days" { type = number }
 variable "enable_point_in_time_recovery" { type = bool }
 
 # S3
 variable "enable_versioning" { type = bool }
 
 # Lambda
-variable "lambda_memory_mb"     { type = number }
+variable "lambda_memory_mb" { type = number }
 variable "lambda_timeout_seconds" { type = number }
 variable "lambda_log_level" { type = string }
 
@@ -58,3 +58,8 @@ variable "schedule_expression" { type = string }
 
 # Bedrock
 variable "enable_bedrock_logging" { type = bool }
+
+# Notification
+variable "ses_from_email" { type = string }
+variable "ses_to_emails" { type = list(string) }
+variable "timezone" { type = string }

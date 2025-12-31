@@ -9,7 +9,7 @@ terraform {
   }
 }
 
-variable "aws_region"  { type = string }
+variable "aws_region" { type = string }
 
 variable "environment" {
   description = "Environment name"
@@ -68,7 +68,7 @@ resource "aws_secretsmanager_secret_version" "pinecone_api_key" {
   secret_id = aws_secretsmanager_secret.pinecone_api_key.id
   secret_string = jsonencode({
     api_key     = "PLACEHOLDER_REPLACE_AFTER_DEPLOY"
-    environment = "us-east-1"  # Pinecone region
+    environment = "us-east-1" # Pinecone region
     index_name  = "lews-geological-knowledge"
   })
 
@@ -205,8 +205,8 @@ output "lambda_secrets_policy_arn" {
 output "secret_names" {
   description = "Map of secret names for easy reference"
   value = {
-    pinecone     = aws_secretsmanager_secret.pinecone_api_key.name
-    thingsboard  = aws_secretsmanager_secret.thingsboard_token.name
-    database     = aws_secretsmanager_secret.database_credentials.name
+    pinecone    = aws_secretsmanager_secret.pinecone_api_key.name
+    thingsboard = aws_secretsmanager_secret.thingsboard_token.name
+    database    = aws_secretsmanager_secret.database_credentials.name
   }
 }

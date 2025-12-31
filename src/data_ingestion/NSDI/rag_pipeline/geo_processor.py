@@ -17,6 +17,7 @@ from typing import Dict, List, Any, Optional, Tuple
 
 try:
     import pygeohash as pgh
+
     GEOHASH_AVAILABLE = True
 except ImportError:
     GEOHASH_AVAILABLE = False
@@ -170,15 +171,22 @@ class GeoJSONProcessor:
         return obj
 
     @staticmethod
-    def extract_field(attributes: Dict, field_names: List[str], default: str = "Unknown") -> str:
+    def extract_field(
+        attributes: Dict, field_names: List[str], default: str = "Unknown"
+    ) -> str:
         """Try multiple field names due to inconsistent NSDI attribute naming."""
         for field in field_names:
-            if attributes.get(field) is not None and str(attributes.get(field)).strip() != "":
+            if (
+                attributes.get(field) is not None
+                and str(attributes.get(field)).strip() != ""
+            ):
                 return str(attributes[field]).strip()
         return default
 
     @staticmethod
-    def extract_numeric_field(attributes: Dict, field_names: List[str]) -> Optional[Decimal]:
+    def extract_numeric_field(
+        attributes: Dict, field_names: List[str]
+    ) -> Optional[Decimal]:
         """Try multiple numeric field names."""
         for field in field_names:
             val = attributes.get(field)
@@ -211,63 +219,101 @@ class GeoJSONProcessor:
         feature: Dict,
         version: int = 1,
         include_geometry: bool = False,
-        source_url: Optional[str] = None
+        source_url: Optional[str] = None,
     ) -> Dict:
         """Process a single NSDI feature for DynamoDB storage."""
         attributes = feature.get("attributes", {})
         geometry = feature.get("geometry", {})
 
-        objectid = attributes.get("objectid") or attributes.get("OBJECTID") or attributes.get("id")
+        objectid = (
+            attributes.get("objectid")
+            or attributes.get("OBJECTID")
+            or attributes.get("id")
+        )
         zone_id = f"NSDI_{int(objectid)}" if objectid else "NSDI_UNKNOWN"
 
         centroid_lat, centroid_lon = cls.extract_centroid(geometry)
         geohash6 = GeoHashCalculator.encode(centroid_lat, centroid_lon, precision=6)
-        geohash4 = geohash6[:4]        
-        
+        geohash4 = geohash6[:4]
+
         geohash = geohash4
 
         level_raw = cls.extract_field(
             attributes,
             ["level", "Level", "LEVEL", "hazard_level", "Hazard_Level", "HAZARD_LEVEL"],
-            "Unknown"
+            "Unknown",
         )
         level = cls.normalize_hazard_level(level_raw)
 
-        district = cls.extract_field(attributes, ["district", "District", "DISTRICT", "dist", "Dist"])
-        ds_division = cls.extract_field(attributes, ["ds_division", "DS_Division", "DS_DIVISION", "dsd", "DSD", "ds_div"])
-        gn_division = cls.extract_field(attributes, ["gn_division", "GN_Division", "GN_DIVISION", "gnd", "GND", "gn_div"])
+        district = cls.extract_field(
+            attributes, ["district", "District", "DISTRICT", "dist", "Dist"]
+        )
+        ds_division = cls.extract_field(
+            attributes,
+            ["ds_division", "DS_Division", "DS_DIVISION", "dsd", "DSD", "ds_div"],
+        )
+        gn_division = cls.extract_field(
+            attributes,
+            ["gn_division", "GN_Division", "GN_DIVISION", "gnd", "GND", "gn_div"],
+        )
 
-        soil_type = cls.extract_field(attributes, ["soil_type", "Soil_Type", "SOIL_TYPE", "soil", "Soil", "geology", "Geology"])
-        landslide_type = cls.extract_field(attributes, ["landslide_type", "Landslide_Type", "LANDSLIDE_TYPE", "ls_type", "LS_Type", "type"])
-        land_use = cls.extract_field(attributes, ["land_use", "Land_Use", "LAND_USE", "landuse", "LandUse"])
+        soil_type = cls.extract_field(
+            attributes,
+            [
+                "soil_type",
+                "Soil_Type",
+                "SOIL_TYPE",
+                "soil",
+                "Soil",
+                "geology",
+                "Geology",
+            ],
+        )
+        landslide_type = cls.extract_field(
+            attributes,
+            [
+                "landslide_type",
+                "Landslide_Type",
+                "LANDSLIDE_TYPE",
+                "ls_type",
+                "LS_Type",
+                "type",
+            ],
+        )
+        land_use = cls.extract_field(
+            attributes, ["land_use", "Land_Use", "LAND_USE", "landuse", "LandUse"]
+        )
 
-        slope_angle = cls.extract_numeric_field(attributes, ["slope_angle", "Slope_Angle", "SLOPE_ANGLE", "slope", "Slope", "gradient"])
+        slope_angle = cls.extract_numeric_field(
+            attributes,
+            ["slope_angle", "Slope_Angle", "SLOPE_ANGLE", "slope", "Slope", "gradient"],
+        )
 
         bbox = cls.calculate_bounding_box(geometry)
 
         item = {
             "zone_id": zone_id,
             "version": version,
-
             "level": level,
             "hazard_level": level,
-
             "centroid_lat": Decimal(str(centroid_lat)),
             "centroid_lon": Decimal(str(centroid_lon)),
             "geohash": geohash,
             "geohash4": geohash4,
             "geohash6": geohash6,
-
             "district": district,
             "ds_division": ds_division,
             "gn_division": gn_division,
             "soil_type": soil_type,
             "landslide_type": landslide_type,
             "land_use": land_use,
-
             "metadata": {
                 "objectid": int(objectid) if objectid else None,
-                "range": Decimal(str(attributes.get("range"))) if attributes.get("range") is not None else None,
+                "range": (
+                    Decimal(str(attributes.get("range")))
+                    if attributes.get("range") is not None
+                    else None
+                ),
                 "shape_area": Decimal(str(attributes.get("st_area(shape)", 0))),
                 "shape_length": Decimal(str(attributes.get("st_length(shape)", 0))),
                 "geometry_points": cls.count_geometry_points(geometry),
@@ -331,4 +377,5 @@ class GeoJSONProcessor:
 def estimate_item_size(item: Dict) -> int:
     """Estimate size in bytes for DynamoDB 400KB limit checks."""
     import json
+
     return len(json.dumps(item, default=str).encode("utf-8"))

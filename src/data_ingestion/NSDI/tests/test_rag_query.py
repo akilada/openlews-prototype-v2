@@ -34,6 +34,7 @@ except ImportError:
 
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
 except ImportError:
     print("⚠️  python-dotenv not installed. Using environment variables only.")
@@ -68,12 +69,12 @@ AREA_SORT_FETCH_K = int(os.getenv("AREA_SORT_FETCH_K", "200"))
 # -----------------------------------------------------------------------------
 HAZARD_ALIASES = {
     # phrase -> allowed hazard levels in the dataset
-    "very high": ["Very High", "High"],   # fallback to High if Very High not present
+    "very high": ["Very High", "High"],  # fallback to High if Very High not present
     "high": ["High"],
     "moderate": ["Moderate"],
     "medium": ["Moderate"],
     "low": ["Low"],
-    "critical": ["Very High", "High"],    # dataset may not have "Critical"
+    "critical": ["Very High", "High"],  # dataset may not have "Critical"
     "dangerous": ["Very High", "High"],
     "severe": ["Very High", "High"],
     "extreme": ["Very High"],
@@ -137,7 +138,7 @@ def _wants_area_sort(query_text: str) -> bool:
 
 def _build_pinecone_filter(
     hazard_levels: Optional[List[str]] = None,
-    bounds: Optional[Tuple[float, float, float, float]] = None
+    bounds: Optional[Tuple[float, float, float, float]] = None,
 ) -> Optional[Dict[str, Any]]:
     """
     Build Pinecone metadata filter using supported operators.
@@ -148,22 +149,26 @@ def _build_pinecone_filter(
     if hazard_levels:
         # Support both "hazard_level" and "level" just in case,
         # without requiring you to re-ingest immediately.
-        clauses.append({
-            "$or": [
-                {LEVEL_FIELD: {"$in": hazard_levels}},
-                {"level": {"$in": hazard_levels}},
-            ]
-        })
+        clauses.append(
+            {
+                "$or": [
+                    {LEVEL_FIELD: {"$in": hazard_levels}},
+                    {"level": {"$in": hazard_levels}},
+                ]
+            }
+        )
 
     if bounds:
         min_lat, max_lat, min_lon, max_lon = bounds
         # Numeric comparisons are supported. :contentReference[oaicite:2]{index=2}
-        clauses.extend([
-            {"centroid_lat": {"$gte": min_lat}},
-            {"centroid_lat": {"$lte": max_lat}},
-            {"centroid_lon": {"$gte": min_lon}},
-            {"centroid_lon": {"$lte": max_lon}},
-        ])
+        clauses.extend(
+            [
+                {"centroid_lat": {"$gte": min_lat}},
+                {"centroid_lat": {"$lte": max_lat}},
+                {"centroid_lon": {"$gte": min_lon}},
+                {"centroid_lon": {"$lte": max_lon}},
+            ]
+        )
 
     if not clauses:
         return None
@@ -237,7 +242,7 @@ def query_hazard_zones(
     top_k: int = 5,
     filters: Optional[Dict[str, Any]] = None,
     auto_filters: bool = True,
-    bounds: Optional[Tuple[float, float, float, float]] = None
+    bounds: Optional[Tuple[float, float, float, float]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Query Pinecone for relevant hazard zones.
@@ -251,7 +256,9 @@ def query_hazard_zones(
         planned_bounds = _parse_bounds(DEFAULT_BADULLA_BOUNDS)
 
     hazard_levels = _detect_hazard_levels(query_text) if auto_filters else None
-    auto_filter = _build_pinecone_filter(hazard_levels=hazard_levels, bounds=planned_bounds)
+    auto_filter = _build_pinecone_filter(
+        hazard_levels=hazard_levels, bounds=planned_bounds
+    )
 
     # Merge user-provided filter with auto filter (AND)
     final_filter = None
@@ -324,10 +331,8 @@ def demo_queries(model: SentenceTransformer, index: Any):
         "Find high hazard zones near Badulla",
         "Show me very high risk landslide areas near Badulla",
         "Critical landslide risk locations near Badulla",
-
         # Demonstrate filter-only query (no location required)
         "Show me moderate hazard zones",
-
         # Demonstrate area sorting
         "Which zones have the largest area near Badulla?",
     ]
@@ -347,11 +352,13 @@ def demo_queries(model: SentenceTransformer, index: Any):
             candidates_sorted = sorted(
                 candidates,
                 key=lambda m: float((m.get("metadata", {}) or {}).get("area_sqm", 0.0)),
-                reverse=True
+                reverse=True,
             )
             results = candidates_sorted[:3]
         else:
-            results = query_hazard_zones(model, index, question, top_k=3, auto_filters=True)
+            results = query_hazard_zones(
+                model, index, question, top_k=3, auto_filters=True
+            )
 
         if results:
             print(f"   ✓ Found {len(results)} results (top shown)")
@@ -364,6 +371,7 @@ def demo_queries(model: SentenceTransformer, index: Any):
             print("   ❌ No results")
 
         import time
+
         time.sleep(0.4)
 
     print("\n" + "=" * 70)
@@ -383,7 +391,7 @@ def filtered_query_example(model: SentenceTransformer, index: Any):
         "landslide zones",
         top_k=5,
         filters={LEVEL_FIELD: {"$in": ["Very High"]}},
-        auto_filters=False
+        auto_filters=False,
     )
     print(f"   Found {len(results)} results")
 
@@ -394,7 +402,7 @@ def filtered_query_example(model: SentenceTransformer, index: Any):
         "dangerous areas",
         top_k=5,
         filters={LEVEL_FIELD: {"$in": ["High", "Very High"]}},
-        auto_filters=False
+        auto_filters=False,
     )
     print(f"   Found {len(results)} results")
 
@@ -403,8 +411,7 @@ def filtered_query_example(model: SentenceTransformer, index: Any):
     if badulla:
         print("\n3) Explicit bounds filter: Badulla bounds + High/Very High")
         bounds_filter = _build_pinecone_filter(
-            hazard_levels=["High", "Very High"],
-            bounds=badulla
+            hazard_levels=["High", "Very High"], bounds=badulla
         )
         results = query_hazard_zones(
             model,
@@ -412,7 +419,7 @@ def filtered_query_example(model: SentenceTransformer, index: Any):
             "hazard zones",
             top_k=5,
             filters=bounds_filter,
-            auto_filters=False
+            auto_filters=False,
         )
         print(f"   Found {len(results)} results")
 
@@ -450,15 +457,21 @@ def interactive_mode(model: SentenceTransformer, index: Any):
                 continue
 
             if _wants_area_sort(query):
-                candidates = query_hazard_zones(model, index, query, top_k=AREA_SORT_FETCH_K, auto_filters=True)
+                candidates = query_hazard_zones(
+                    model, index, query, top_k=AREA_SORT_FETCH_K, auto_filters=True
+                )
                 candidates_sorted = sorted(
                     candidates,
-                    key=lambda m: float((m.get("metadata", {}) or {}).get("area_sqm", 0.0)),
-                    reverse=True
+                    key=lambda m: float(
+                        (m.get("metadata", {}) or {}).get("area_sqm", 0.0)
+                    ),
+                    reverse=True,
                 )
                 results = candidates_sorted[:5]
             else:
-                results = query_hazard_zones(model, index, query, top_k=5, auto_filters=True)
+                results = query_hazard_zones(
+                    model, index, query, top_k=5, auto_filters=True
+                )
 
             print_results(query, results)
 
@@ -476,15 +489,19 @@ def main():
     if len(sys.argv) > 1:
         query = " ".join(sys.argv[1:])
         if _wants_area_sort(query):
-            candidates = query_hazard_zones(model, index, query, top_k=AREA_SORT_FETCH_K, auto_filters=True)
+            candidates = query_hazard_zones(
+                model, index, query, top_k=AREA_SORT_FETCH_K, auto_filters=True
+            )
             candidates_sorted = sorted(
                 candidates,
                 key=lambda m: float((m.get("metadata", {}) or {}).get("area_sqm", 0.0)),
-                reverse=True
+                reverse=True,
             )
             results = candidates_sorted[:5]
         else:
-            results = query_hazard_zones(model, index, query, top_k=5, auto_filters=True)
+            results = query_hazard_zones(
+                model, index, query, top_k=5, auto_filters=True
+            )
 
         print_results(query, results)
         return
@@ -511,15 +528,21 @@ def main():
         query = input("\nEnter your query: ").strip()
         if query:
             if _wants_area_sort(query):
-                candidates = query_hazard_zones(model, index, query, top_k=AREA_SORT_FETCH_K, auto_filters=True)
+                candidates = query_hazard_zones(
+                    model, index, query, top_k=AREA_SORT_FETCH_K, auto_filters=True
+                )
                 candidates_sorted = sorted(
                     candidates,
-                    key=lambda m: float((m.get("metadata", {}) or {}).get("area_sqm", 0.0)),
-                    reverse=True
+                    key=lambda m: float(
+                        (m.get("metadata", {}) or {}).get("area_sqm", 0.0)
+                    ),
+                    reverse=True,
                 )
                 results = candidates_sorted[:5]
             else:
-                results = query_hazard_zones(model, index, query, top_k=5, auto_filters=True)
+                results = query_hazard_zones(
+                    model, index, query, top_k=5, auto_filters=True
+                )
             print_results(query, results)
     else:
         print("❌ Invalid choice")
@@ -534,5 +557,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

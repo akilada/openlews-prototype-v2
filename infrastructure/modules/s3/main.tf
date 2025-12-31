@@ -14,7 +14,7 @@ variable "environment" {
   type        = string
 }
 
-variable "aws_region"  { type = string }
+variable "aws_region" { type = string }
 
 variable "name_prefix" {
   description = "Prefix for resource names"

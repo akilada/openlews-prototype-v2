@@ -5,11 +5,11 @@
 resource "aws_api_gateway_rest_api" "main" {
   name        = "${var.project_name}-${var.environment}-ingestor-api"
   description = "OpenLEWS Ingestor API for sensor telemetry ingestion"
-  
+
   endpoint_configuration {
     types = ["REGIONAL"]
   }
-  
+
   tags = local.common_tags
 }
 
@@ -22,12 +22,12 @@ resource "aws_api_gateway_resource" "telemetry" {
 
 # POST method on /telemetry
 resource "aws_api_gateway_method" "telemetry_post" {
-  rest_api_id   = aws_api_gateway_rest_api.main.id
-  resource_id   = aws_api_gateway_resource.telemetry.id
-  http_method   = "POST"
-  authorization = "NONE"
+  rest_api_id      = aws_api_gateway_rest_api.main.id
+  resource_id      = aws_api_gateway_resource.telemetry.id
+  http_method      = "POST"
+  authorization    = "NONE"
   api_key_required = var.enable_api_key_auth
-  
+
   request_parameters = {
     "method.request.header.Content-Type" = true
   }
@@ -56,7 +56,7 @@ resource "aws_api_gateway_integration" "telemetry_options" {
   resource_id = aws_api_gateway_resource.telemetry.id
   http_method = aws_api_gateway_method.telemetry_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{\"statusCode\": 200}"
   }
@@ -67,13 +67,13 @@ resource "aws_api_gateway_method_response" "telemetry_options_200" {
   resource_id = aws_api_gateway_resource.telemetry.id
   http_method = aws_api_gateway_method.telemetry_options.http_method
   status_code = "200"
-  
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
     "method.response.header.Access-Control-Allow-Origin"  = true
   }
-  
+
   response_models = {
     "application/json" = "Empty"
   }
@@ -84,20 +84,20 @@ resource "aws_api_gateway_integration_response" "telemetry_options" {
   resource_id = aws_api_gateway_resource.telemetry.id
   http_method = aws_api_gateway_method.telemetry_options.http_method
   status_code = aws_api_gateway_method_response.telemetry_options_200.status_code
-  
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
-  
+
   depends_on = [aws_api_gateway_integration.telemetry_options]
 }
 
 # Deployment
 resource "aws_api_gateway_deployment" "main" {
   rest_api_id = aws_api_gateway_rest_api.main.id
-  
+
   triggers = {
     redeployment = sha1(jsonencode([
       aws_api_gateway_resource.telemetry.id,
@@ -105,11 +105,11 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_integration.telemetry_lambda.id,
     ]))
   }
-  
+
   lifecycle {
     create_before_destroy = true
   }
-  
+
   depends_on = [
     aws_api_gateway_integration.telemetry_lambda,
     aws_api_gateway_integration.telemetry_options
@@ -121,7 +121,7 @@ resource "aws_api_gateway_stage" "main" {
   deployment_id = aws_api_gateway_deployment.main.id
   rest_api_id   = aws_api_gateway_rest_api.main.id
   stage_name    = var.environment
-  
+
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_logs.arn
     format = jsonencode({
@@ -137,7 +137,7 @@ resource "aws_api_gateway_stage" "main" {
       responseLength = "$context.responseLength"
     })
   }
-  
+
   tags = local.common_tags
 
   depends_on = [aws_api_gateway_account.main]
@@ -147,7 +147,7 @@ resource "aws_api_gateway_stage" "main" {
 resource "aws_cloudwatch_log_group" "api_logs" {
   name              = "/aws/apigateway/${var.project_name}-ingestor-${var.environment}"
   retention_in_days = var.cloudwatch_log_retention_days
-  
+
   tags = local.common_tags
 }
 
@@ -155,33 +155,33 @@ resource "aws_cloudwatch_log_group" "api_logs" {
 resource "aws_api_gateway_usage_plan" "main" {
   name        = "${var.project_name}-ingestor-${var.environment}"
   description = "Usage plan for OpenLEWS Ingestor API"
-  
+
   api_stages {
     api_id = aws_api_gateway_rest_api.main.id
     stage  = aws_api_gateway_stage.main.stage_name
   }
-  
+
   quota_settings {
-    limit  = var.api_quota_limit 
+    limit  = var.api_quota_limit
     period = "MONTH"
   }
-  
+
   throttle_settings {
     burst_limit = var.api_burst_limit
     rate_limit  = var.api_rate_limit
   }
-  
+
   tags = local.common_tags
 }
 
 # API Key
 resource "aws_api_gateway_api_key" "simulator" {
   count = var.enable_api_key_auth ? 1 : 0
-  
+
   name        = "${var.project_name}-simulator-${var.environment}"
   description = "API key for OpenLEWS simulator"
   enabled     = true
-  
+
   tags = merge(
     local.common_tags,
     {
@@ -193,7 +193,7 @@ resource "aws_api_gateway_api_key" "simulator" {
 # Associate API Key with Usage Plan
 resource "aws_api_gateway_usage_plan_key" "simulator" {
   count = var.enable_api_key_auth ? 1 : 0
-  
+
   key_id        = aws_api_gateway_api_key.simulator[0].id
   key_type      = "API_KEY"
   usage_plan_id = aws_api_gateway_usage_plan.main.id
@@ -202,18 +202,18 @@ resource "aws_api_gateway_usage_plan_key" "simulator" {
 # Store API Key in Secrets Manager
 resource "aws_secretsmanager_secret" "api_key" {
   count = var.enable_api_key_auth ? 1 : 0
-  
+
   name        = "${var.project_name}-${var.environment}/ingestor/api-key"
   description = "API Gateway key for OpenLEWS Ingestor"
-  
+
   recovery_window_in_days = 7
-  
+
   tags = local.common_tags
 }
 
 resource "aws_secretsmanager_secret_version" "api_key" {
   count = var.enable_api_key_auth ? 1 : 0
-  
+
   secret_id     = aws_secretsmanager_secret.api_key[0].id
   secret_string = aws_api_gateway_api_key.simulator[0].value
 }

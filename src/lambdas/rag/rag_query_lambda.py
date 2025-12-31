@@ -27,6 +27,7 @@ except ImportError as e:
 
 try:
     from pinecone import Pinecone
+
     PINECONE_AVAILABLE = True
 except ImportError:
     PINECONE_AVAILABLE = False
@@ -35,20 +36,28 @@ except ImportError:
 # Geohash neighbour support
 _BASE32 = "0123456789bcdefghjkmnpqrstuvwxyz"
 _NEIGHBORS = {
-    "right": {"even": "bc01fg45238967deuvhjyznpkmstqrwx",
-              "odd":  "p0r21436x8zb9dcf5h7kjnmqesgutwvy"},
-    "left":  {"even": "238967debc01fg45kmstqrwxuvhjyznp",
-              "odd":  "14365h7k9dcfesgujnmqp0r2twvyx8zb"},
-    "top":   {"even": "p0r21436x8zb9dcf5h7kjnmqesgutwvy",
-              "odd":  "bc01fg45238967deuvhjyznpkmstqrwx"},
-    "bottom":{"even": "14365h7k9dcfesgujnmqp0r2twvyx8zb",
-              "odd":  "238967debc01fg45kmstqrwxuvhjyznp"},
+    "right": {
+        "even": "bc01fg45238967deuvhjyznpkmstqrwx",
+        "odd": "p0r21436x8zb9dcf5h7kjnmqesgutwvy",
+    },
+    "left": {
+        "even": "238967debc01fg45kmstqrwxuvhjyznp",
+        "odd": "14365h7k9dcfesgujnmqp0r2twvyx8zb",
+    },
+    "top": {
+        "even": "p0r21436x8zb9dcf5h7kjnmqesgutwvy",
+        "odd": "bc01fg45238967deuvhjyznpkmstqrwx",
+    },
+    "bottom": {
+        "even": "14365h7k9dcfesgujnmqp0r2twvyx8zb",
+        "odd": "238967debc01fg45kmstqrwxuvhjyznp",
+    },
 }
 _BORDERS = {
     "right": {"even": "bcfguvyz", "odd": "prxz"},
-    "left":  {"even": "0145hjnp", "odd": "028b"},
-    "top":   {"even": "prxz",     "odd": "bcfguvyz"},
-    "bottom":{"even": "028b",     "odd": "0145hjnp"},
+    "left": {"even": "0145hjnp", "odd": "028b"},
+    "top": {"even": "prxz", "odd": "bcfguvyz"},
+    "bottom": {"even": "028b", "odd": "0145hjnp"},
 }
 
 
@@ -83,7 +92,10 @@ def geohash_neighbors_8(cell: str) -> List[str]:
 
     candidates = [
         cell,
-        top, bottom, right, left,
+        top,
+        bottom,
+        right,
+        left,
         _adjacent(top, "right") if top else "",
         _adjacent(top, "left") if top else "",
         _adjacent(bottom, "right") if bottom else "",
@@ -127,14 +139,18 @@ class GeoCalculator:
     EARTH_RADIUS_KM = 6371.0
 
     @staticmethod
-    def haversine_distance_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    def haversine_distance_m(
+        lat1: float, lon1: float, lat2: float, lon2: float
+    ) -> float:
         lat1_rad = math.radians(lat1)
         lat2_rad = math.radians(lat2)
         dlat = math.radians(lat2 - lat1)
         dlon = math.radians(lon2 - lon1)
 
-        a = (math.sin(dlat / 2) ** 2 +
-             math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2) ** 2)
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2) ** 2
+        )
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
         return (GeoCalculator.EARTH_RADIUS_KM * c) * 1000.0
 
@@ -149,11 +165,17 @@ class GeoCalculator:
 
 class RAGQueryHandler:
     @staticmethod
-    def query_nearest_zone(latitude: float, longitude: float, max_distance_km: float = 5.0) -> Dict[str, Any]:
-        geohash = GeoCalculator.calculate_geohash(latitude, longitude, precision=GEOHASH_PRECISION)
+    def query_nearest_zone(
+        latitude: float, longitude: float, max_distance_km: float = 5.0
+    ) -> Dict[str, Any]:
+        geohash = GeoCalculator.calculate_geohash(
+            latitude, longitude, precision=GEOHASH_PRECISION
+        )
         cells = GeoCalculator.get_geohash_neighbors(geohash)
 
-        print(f"Geohash={geohash} precision={GEOHASH_PRECISION} cells={len(cells)} index={GEOHASH_INDEX_NAME}")
+        print(
+            f"Geohash={geohash} precision={GEOHASH_PRECISION} cells={len(cells)} index={GEOHASH_INDEX_NAME}"
+        )
 
         nearest_zone = None
         min_distance = float("inf")
@@ -168,11 +190,15 @@ class RAGQueryHandler:
                 for item in resp.get("Items", []):
                     zone_lat = float(item["centroid_lat"])
                     zone_lon = float(item["centroid_lon"])
-                    dist_m = GeoCalculator.haversine_distance_m(latitude, longitude, zone_lat, zone_lon)
+                    dist_m = GeoCalculator.haversine_distance_m(
+                        latitude, longitude, zone_lat, zone_lon
+                    )
 
                     if dist_m <= (max_distance_km * 1000.0) and dist_m < min_distance:
                         min_distance = dist_m
-                        hazard_level = item.get("hazard_level") or item.get("level", "Unknown")
+                        hazard_level = item.get("hazard_level") or item.get(
+                            "level", "Unknown"
+                        )
 
                         nearest_zone = {
                             "zone_id": item.get("zone_id", "Unknown"),
@@ -188,8 +214,14 @@ class RAGQueryHandler:
                             "soil_type": item.get("soil_type", "Unknown"),
                             "land_use": item.get("land_use", "Unknown"),
                             "landslide_type": item.get("landslide_type", "Unknown"),
-                            "area_sqm": float(item.get("metadata", {}).get("shape_area", 0)) if item.get("metadata") else 0,
-                            "metadata": RAGQueryHandler._serialize_metadata(item.get("metadata", {})),
+                            "area_sqm": (
+                                float(item.get("metadata", {}).get("shape_area", 0))
+                                if item.get("metadata")
+                                else 0
+                            ),
+                            "metadata": RAGQueryHandler._serialize_metadata(
+                                item.get("metadata", {})
+                            ),
                         }
 
                         if item.get("slope_angle") is not None:
@@ -215,8 +247,12 @@ class RAGQueryHandler:
         }
 
     @staticmethod
-    def query_zones_in_radius(latitude: float, longitude: float, radius_km: float = 1.0) -> Dict[str, Any]:
-        geohash = GeoCalculator.calculate_geohash(latitude, longitude, precision=GEOHASH_PRECISION)
+    def query_zones_in_radius(
+        latitude: float, longitude: float, radius_km: float = 1.0
+    ) -> Dict[str, Any]:
+        geohash = GeoCalculator.calculate_geohash(
+            latitude, longitude, precision=GEOHASH_PRECISION
+        )
         cells = GeoCalculator.get_geohash_neighbors(geohash)
 
         zones: List[Dict[str, Any]] = []
@@ -231,22 +267,32 @@ class RAGQueryHandler:
                 for item in resp.get("Items", []):
                     zone_lat = float(item["centroid_lat"])
                     zone_lon = float(item["centroid_lon"])
-                    dist_m = GeoCalculator.haversine_distance_m(latitude, longitude, zone_lat, zone_lon)
+                    dist_m = GeoCalculator.haversine_distance_m(
+                        latitude, longitude, zone_lat, zone_lon
+                    )
 
                     if dist_m <= (radius_km * 1000.0):
-                        hazard_level = item.get("hazard_level") or item.get("level", "Unknown")
-                        zones.append({
-                            "zone_id": item.get("zone_id", "Unknown"),
-                            "hazard_level": hazard_level,
-                            "level": hazard_level,
-                            "distance_meters": round(dist_m, 2),
-                            "distance_m": round(dist_m, 2),
-                            "centroid": {"lat": zone_lat, "lon": zone_lon},
-                            "geohash": item.get("geohash", gh),
-                            "district": item.get("district", "Unknown"),
-                            "soil_type": item.get("soil_type", "Unknown"),
-                            "area_sqm": float(item.get("metadata", {}).get("shape_area", 0)) if item.get("metadata") else 0,
-                        })
+                        hazard_level = item.get("hazard_level") or item.get(
+                            "level", "Unknown"
+                        )
+                        zones.append(
+                            {
+                                "zone_id": item.get("zone_id", "Unknown"),
+                                "hazard_level": hazard_level,
+                                "level": hazard_level,
+                                "distance_meters": round(dist_m, 2),
+                                "distance_m": round(dist_m, 2),
+                                "centroid": {"lat": zone_lat, "lon": zone_lon},
+                                "geohash": item.get("geohash", gh),
+                                "district": item.get("district", "Unknown"),
+                                "soil_type": item.get("soil_type", "Unknown"),
+                                "area_sqm": (
+                                    float(item.get("metadata", {}).get("shape_area", 0))
+                                    if item.get("metadata")
+                                    else 0
+                                ),
+                            }
+                        )
 
             except Exception as e:
                 print(f"Error querying geohash {gh}: {e}")
@@ -270,7 +316,9 @@ class RAGQueryHandler:
         }
 
     @staticmethod
-    def query_semantic(query_text: str, top_k: int = 5, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def query_semantic(
+        query_text: str, top_k: int = 5, filters: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         if not pinecone_index:
             return {
                 "success": False,
@@ -297,7 +345,9 @@ class RAGQueryHandler:
         return out
 
     @staticmethod
-    def _generate_risk_context(zones: List[Dict[str, Any]], level_counts: Dict[str, int]) -> str:
+    def _generate_risk_context(
+        zones: List[Dict[str, Any]], level_counts: Dict[str, int]
+    ) -> str:
         if not zones:
             return "No hazard zones in vicinity"
         nearest = zones[0]
@@ -332,13 +382,17 @@ def lambda_handler(event: Any, context: Any) -> Dict[str, Any]:
             latitude = float(ev["latitude"])
             longitude = float(ev["longitude"])
             max_distance_km = float(ev.get("max_distance_km", 5.0))
-            result = RAGQueryHandler.query_nearest_zone(latitude, longitude, max_distance_km)
+            result = RAGQueryHandler.query_nearest_zone(
+                latitude, longitude, max_distance_km
+            )
 
         elif action == "radius":
             latitude = float(ev["latitude"])
             longitude = float(ev["longitude"])
             radius_km = float(ev.get("radius_km", 1.0))
-            result = RAGQueryHandler.query_zones_in_radius(latitude, longitude, radius_km)
+            result = RAGQueryHandler.query_zones_in_radius(
+                latitude, longitude, radius_km
+            )
 
         elif action == "semantic":
             query_text = str(ev["query_text"])
@@ -351,7 +405,10 @@ def lambda_handler(event: Any, context: Any) -> Dict[str, Any]:
 
         return {
             "statusCode": 200 if result.get("success") else 400,
-            "headers": {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+            },
             "body": json.dumps(result, default=str),
         }
 
@@ -359,7 +416,9 @@ def lambda_handler(event: Any, context: Any) -> Dict[str, Any]:
         return {
             "statusCode": 400,
             "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({"success": False, "error": f"Missing required parameter: {str(e)}"}),
+            "body": json.dumps(
+                {"success": False, "error": f"Missing required parameter: {str(e)}"}
+            ),
         }
 
     except Exception as e:

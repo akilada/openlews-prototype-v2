@@ -11,7 +11,7 @@ import json
 import os
 import random
 import time
-from typing import Dict, Any, Optional, List
+from typing import Dict, Optional, List
 
 import boto3
 from botocore.config import Config
@@ -32,7 +32,9 @@ class BedrockClient:
         "anthropic.claude-3-haiku-20240307-v1:0",
     )
 
-    DEFAULT_REGION = os.environ.get("BEDROCK_REGION", os.environ.get("AWS_REGION", "ap-southeast-2"))
+    DEFAULT_REGION = os.environ.get(
+        "BEDROCK_REGION", os.environ.get("AWS_REGION", "ap-southeast-2")
+    )
 
     SYSTEM_PROMPT = """You are a Senior Geotechnical Engineer at Sri Lanka's National Building Research Organisation (NBRO), specializing in landslide early warning systems.
 
@@ -121,23 +123,37 @@ CONTACT: NBRO Emergency Hotline 117
 
 Keep it concise and actionable."""
 
-    def __init__(self, model_id: Optional[str] = None, region_name: Optional[str] = None):
+    def __init__(
+        self, model_id: Optional[str] = None, region_name: Optional[str] = None
+    ):
         self.model_id = model_id or self.DEFAULT_MODEL_ID
         self.region_name = region_name or self.DEFAULT_REGION
 
         # Standard retry config (covers some transient errors)
         cfg = Config(
             region_name=self.region_name,
-            retries={"max_attempts": int(os.environ.get("BEDROCK_BOTO_RETRIES", "5")), "mode": "standard"},
+            retries={
+                "max_attempts": int(os.environ.get("BEDROCK_BOTO_RETRIES", "5")),
+                "mode": "standard",
+            },
         )
 
-        self.client = boto3.client("bedrock-runtime", region_name=self.region_name, config=cfg)
-        logger.info("Initialized BedrockClient", extra={"model_id": self.model_id, "region": self.region_name})
+        self.client = boto3.client(
+            "bedrock-runtime", region_name=self.region_name, config=cfg
+        )
+        logger.info(
+            "Initialized BedrockClient",
+            extra={"model_id": self.model_id, "region": self.region_name},
+        )
 
     async def assess_risk(self, detection_input: Dict) -> Dict:
         logger.info(
             "Requesting LLM risk assessment",
-            extra={"type": detection_input.get("type"), "risk_score": detection_input.get("avg_risk") or detection_input.get("risk_score")},
+            extra={
+                "type": detection_input.get("type"),
+                "risk_score": detection_input.get("avg_risk")
+                or detection_input.get("risk_score"),
+            },
         )
 
         prompt = self._build_risk_assessment_prompt(detection_input)
@@ -146,21 +162,42 @@ Keep it concise and actionable."""
         try:
             assessment = json.loads(response_text)
 
-            required_fields = ["risk_level", "confidence", "reasoning", "recommended_action"]
+            required_fields = [
+                "risk_level",
+                "confidence",
+                "reasoning",
+                "recommended_action",
+            ]
             for f in required_fields:
                 if f not in assessment:
                     raise ValueError(f"Missing required field: {f}")
 
-            logger.info("LLM risk assessment received", extra={"risk_level": assessment["risk_level"], "confidence": assessment["confidence"]})
+            logger.info(
+                "LLM risk assessment received",
+                extra={
+                    "risk_level": assessment["risk_level"],
+                    "confidence": assessment["confidence"],
+                },
+            )
             return assessment
 
         except json.JSONDecodeError as e:
-            logger.error("Failed to parse LLM response as JSON", extra={"error": str(e), "raw": response_text[:2000]})
+            logger.error(
+                "Failed to parse LLM response as JSON",
+                extra={"error": str(e), "raw": response_text[:2000]},
+            )
             raise
 
-    async def generate_narrative(self, risk_assessment: Dict, detection_data: Dict, rag_context: Dict) -> str:
-        logger.info("Generating alert narrative", extra={"risk_level": risk_assessment.get("risk_level")})
-        prompt = self._build_narrative_prompt(risk_assessment, detection_data, rag_context)
+    async def generate_narrative(
+        self, risk_assessment: Dict, detection_data: Dict, rag_context: Dict
+    ) -> str:
+        logger.info(
+            "Generating alert narrative",
+            extra={"risk_level": risk_assessment.get("risk_level")},
+        )
+        prompt = self._build_narrative_prompt(
+            risk_assessment, detection_data, rag_context
+        )
         text = await self._invoke_bedrock(prompt, expect_json=False)
         return text.strip()
 
@@ -192,7 +229,9 @@ Keep it concise and actionable."""
             f"- 24h Rainfall: {telemetry.get('rainfall_24h_mm', 0):.1f} mm"
         )
 
-        spatial_correlation = float(detection_input.get("spatial_correlation", 0.0) or 0.0)
+        spatial_correlation = float(
+            detection_input.get("spatial_correlation", 0.0) or 0.0
+        )
         if detection_input.get("type") == "cluster":
             spatial_context = (
                 f"- Cluster Size: {detection_input['cluster_size']} sensors within ~50m\n"
@@ -206,7 +245,9 @@ Keep it concise and actionable."""
                 note = "Isolated anomaly (possible sensor fault)"
             else:
                 note = "Moderate agreement"
-            spatial_context = f"- Spatial Correlation: {spatial_correlation:.2f}\n- {note}"
+            spatial_context = (
+                f"- Spatial Correlation: {spatial_correlation:.2f}\n- {note}"
+            )
 
         moisture_trend = float(telemetry.get("moisture_trend_pct_hr", 0) or 0.0)
         tilt_trend = float(telemetry.get("tilt_acceleration_mm_hr2", 0) or 0.0)
@@ -232,7 +273,9 @@ Keep it concise and actionable."""
             rag_context=rag_summary,
         )
 
-    def _build_narrative_prompt(self, risk_assessment: Dict, detection_data: Dict, rag_context: Dict) -> str:
+    def _build_narrative_prompt(
+        self, risk_assessment: Dict, detection_data: Dict, rag_context: Dict
+    ) -> str:
         from datetime import datetime
 
         loc = detection_data.get("location") or {}
@@ -277,7 +320,9 @@ Keep it concise and actionable."""
             time_to_failure=risk_assessment.get("time_to_failure_estimate", "unknown"),
         )
 
-        return prompt.replace("[Current timestamp]", datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"))
+        return prompt.replace(
+            "[Current timestamp]", datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+        )
 
     async def _invoke_bedrock(self, user_prompt: str, expect_json: bool) -> str:
         """
@@ -294,9 +339,7 @@ Keep it concise and actionable."""
                 + "\n\nIMPORTANT: Return ONLY valid JSON. No extra keys, no prose outside JSON."
             )
 
-        messages = [
-            {"role": "user", "content": [{"text": user_prompt}]}
-        ]
+        messages = [{"role": "user", "content": [{"text": user_prompt}]}]
         system_prompts = [{"text": self.SYSTEM_PROMPT}]
 
         inference_cfg = {
@@ -352,7 +395,10 @@ Keep it concise and actionable."""
                     "InternalServerException",
                 }
 
-                logger.warning("Bedrock call failed", extra={"attempt": attempt, "code": code, "message": msg})
+                logger.warning(
+                    "Bedrock call failed",
+                    extra={"attempt": attempt, "code": code, "message": msg},
+                )
 
                 if not retryable or attempt == max_attempts:
                     raise
@@ -362,10 +408,15 @@ Keep it concise and actionable."""
 
             except Exception as e:
                 last_err = e
-                logger.exception("Bedrock call failed with unexpected error", extra={"attempt": attempt})
+                logger.exception(
+                    "Bedrock call failed with unexpected error",
+                    extra={"attempt": attempt},
+                )
                 if attempt == max_attempts:
                     raise
                 sleep_s = (base_sleep * (2 ** (attempt - 1))) + random.uniform(0, 0.25)
                 time.sleep(min(sleep_s, 10.0))
 
-        raise RuntimeError(f"Bedrock invocation failed after {max_attempts} attempts: {last_err}")
+        raise RuntimeError(
+            f"Bedrock invocation failed after {max_attempts} attempts: {last_err}"
+        )

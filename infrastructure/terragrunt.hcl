@@ -9,9 +9,9 @@ locals {
   aws_region   = "ap-southeast-2"
 
   common_tags = {
-    Project     = "OpenLEWS"
-    ManagedBy   = "Terragrunt"
-    Repository  = "openlews-prototype"
+    Project    = "OpenLEWS"
+    ManagedBy  = "Terragrunt"
+    Repository = "openlews-prototype"
   }
 }
 

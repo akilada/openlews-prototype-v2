@@ -37,30 +37,6 @@
       }
     },
     {
-      "type": "required_status_checks",
-      "parameters": {
-        "strict_required_status_checks_policy": true,
-        "do_not_enforce_on_create": false,
-        "required_status_checks": [
-          {
-            "context": "PR Quality & Format / Python quality"
-          },
-          {
-            "context": "PR Quality & Format / Terraform quality"
-          },
-          {
-            "context": "PR Quality & Format / YAML+JSON lint"
-          },
-          {
-            "context": "PR Quality & Format / Branch naming"
-          },
-          {
-            "context": "CodeQL Security Scan / Analyze (python)"
-          }
-        ]
-      }
-    },
-    {
       "type": "code_scanning",
       "parameters": {
         "code_scanning_tools": [

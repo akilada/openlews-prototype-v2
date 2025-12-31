@@ -21,8 +21,8 @@ module "dynamodb" {
   name_prefix                   = var.name_prefix
   ttl_days                      = var.ttl_days
   enable_point_in_time_recovery = var.enable_point_in_time_recovery
-  
-  tags                          = var.tags
+
+  tags = var.tags
 }
 
 module "s3" {
@@ -56,17 +56,17 @@ module "location" {
 module "lambda_rag_query" {
   source = "../lambda/rag_query"
 
-  environment                   = var.environment
-  project_name                  = var.project_name
-  dynamodb_table_name           = var.dynamodb_table_name
-  dynamodb_kms_arn              = module.dynamodb.kms_key_arn
-  s3_artifacts_bucket           = var.s3_artifacts_bucket
-  pinecone_api_key_secret_name  = var.pinecone_api_key_secret_name
-  pinecone_index_name           = var.pinecone_index_name
-  pinecone_namespace            = var.pinecone_namespace
-  geohash_index_name            = var.geohash_index_name
-  geohash_precision             = var.geohash_precision
-  tags                          = var.tags
+  environment                  = var.environment
+  project_name                 = var.project_name
+  dynamodb_table_name          = var.dynamodb_table_name
+  dynamodb_kms_arn             = module.dynamodb.kms_key_arn
+  s3_artifacts_bucket          = var.s3_artifacts_bucket
+  pinecone_api_key_secret_name = var.pinecone_api_key_secret_name
+  pinecone_index_name          = var.pinecone_index_name
+  pinecone_namespace           = var.pinecone_namespace
+  geohash_index_name           = var.geohash_index_name
+  geohash_precision            = var.geohash_precision
+  tags                         = var.tags
 
   depends_on = [
     module.dynamodb
@@ -92,7 +92,7 @@ module "lambda_telemetry_ingestor" {
   api_rate_limit                = var.api_rate_limit
   enable_api_key_auth           = var.enable_api_key_auth
 
-  tags                          = var.tags
+  tags = var.tags
 
   depends_on = [
     module.dynamodb
@@ -121,10 +121,25 @@ module "lambda_detector" {
   place_index_name              = module.location.place_index_name
   place_index_arn               = module.location.place_index_arn
 
-  tags                          = var.tags
+  tags = var.tags
 
   depends_on = [
     module.dynamodb,
     module.lambda_telemetry_ingestor
   ]
+}
+
+module "alerts_emailer" {
+  source = "../notifications"
+
+  project_name = var.project_name
+  environment  = var.environment
+  region       = var.aws_region
+
+  sns_topic_arn  = module.lambda_detector.sns_topic_arn
+  ses_from_email = var.ses_from_email
+  ses_to_emails  = var.ses_to_emails
+  timezone       = var.timezone
+
+  tags = var.tags
 }

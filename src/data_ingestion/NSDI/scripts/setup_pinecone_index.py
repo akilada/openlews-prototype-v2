@@ -8,7 +8,7 @@ Run this BEFORE running the main NSDI ingestion pipeline.
 import os
 import sys
 import time
-from typing import Any, Optional
+from typing import Any
 
 try:
     from dotenv import load_dotenv
@@ -27,11 +27,11 @@ except ImportError as e:
     print("Make sure you installed the correct package.")
     print()
     print("If you're on Python 3.9:")
-    print('  pip uninstall -y pinecone-client pinecone')
+    print("  pip uninstall -y pinecone-client pinecone")
     print('  pip install "pinecone[grpc]<8"')
     print()
     print("If you're on Python 3.10+:")
-    print('  pip uninstall -y pinecone-client')
+    print("  pip uninstall -y pinecone-client")
     print('  pip install "pinecone[grpc]" --upgrade')
     print()
     print(f"Details: {e}")
@@ -93,8 +93,14 @@ def _extract_index_names(list_indexes_result: Any) -> list[str]:
 
     if isinstance(list_indexes_result, dict):
         for key in ("indexes", "data"):
-            if key in list_indexes_result and isinstance(list_indexes_result[key], list):
-                return [x.get("name") for x in list_indexes_result[key] if isinstance(x, dict) and x.get("name")]
+            if key in list_indexes_result and isinstance(
+                list_indexes_result[key], list
+            ):
+                return [
+                    x.get("name")
+                    for x in list_indexes_result[key]
+                    if isinstance(x, dict) and x.get("name")
+                ]
 
     try:
         txt = str(list_indexes_result)
@@ -118,7 +124,9 @@ def check_index_exists(pc: Pinecone, index_name: str) -> bool:
         return False
 
 
-def wait_for_index_ready(pc: Pinecone, index_name: str, max_wait_seconds: int = 180) -> bool:
+def wait_for_index_ready(
+    pc: Pinecone, index_name: str, max_wait_seconds: int = 180
+) -> bool:
     """Wait until the index is ready."""
     start = time.time()
     while time.time() - start < max_wait_seconds:
@@ -131,7 +139,10 @@ def wait_for_index_ready(pc: Pinecone, index_name: str, max_wait_seconds: int = 
                     return True
             else:
                 # object form
-                if hasattr(desc, "status") and getattr(desc.status, "ready", None) is True:
+                if (
+                    hasattr(desc, "status")
+                    and getattr(desc.status, "ready", None) is True
+                ):
                     return True
         except Exception:
             pass

@@ -11,9 +11,9 @@ terraform {
 }
 
 locals {
-  lambda_name = "${var.project_name}-${var.environment}-detector"
+  lambda_name       = "${var.project_name}-${var.environment}-detector"
   alerts_table_name = "${var.project_name}-${var.environment}-alerts"
-  sns_topic_name = "${var.project_name}-${var.environment}-alerts"
+  sns_topic_name    = "${var.project_name}-${var.environment}-alerts"
 }
 
 # Lambda Function
@@ -22,11 +22,11 @@ resource "aws_lambda_function" "detector" {
   role          = aws_iam_role.detector_lambda.arn
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.11"
-  timeout       = 300  # 5 minutes
-  memory_size   = 512  # MB
-  
-  filename          = "${path.module}/lambda_package.zip"
-  source_code_hash  = fileexists("${path.module}/lambda_package.zip") ? filebase64sha256("${path.module}/lambda_package.zip") : null
+  timeout       = 300 # 5 minutes
+  memory_size   = 512 # MB
+
+  filename         = "${path.module}/lambda_package.zip"
+  source_code_hash = fileexists("${path.module}/lambda_package.zip") ? filebase64sha256("${path.module}/lambda_package.zip") : null
 
   environment {
     variables = {
@@ -38,7 +38,7 @@ resource "aws_lambda_function" "detector" {
       BEDROCK_MODEL_ID        = var.bedrock_model_id
       POWERTOOLS_LOG_LEVEL    = var.lambda_log_level
       POWERTOOLS_SERVICE_NAME = "openlews-detector"
-      PLACE_INDEX_NAME         = var.place_index_name
+      PLACE_INDEX_NAME        = var.place_index_name
     }
   }
 
@@ -206,7 +206,7 @@ resource "aws_lambda_permission" "allow_eventbridge" {
 
 # SNS Topic Policy
 resource "aws_sns_topic_policy" "alerts" {
-  count     = var.alert_email != "" ? 1 : 0
+  count = var.alert_email != "" ? 1 : 0
 
   arn = aws_sns_topic.alerts[0].arn
 
@@ -238,8 +238,8 @@ resource "aws_sns_topic_subscription" "email" {
 
 resource "aws_sns_topic" "alerts" {
   count = var.alert_email != "" ? 1 : 0
-  name  = "${local.sns_topic_name}"
-  
+  name  = local.sns_topic_name
+
   tags = merge(var.tags, {
     Name = local.sns_topic_name
   })

@@ -44,7 +44,9 @@ def _safe_get(d: Dict, *keys: str) -> Optional[Any]:
 class LocationResolver:
     def __init__(self) -> None:
         self.place_index_name = os.environ.get("PLACE_INDEX_NAME", "").strip()
-        self.region = os.environ.get("LOCATION_REGION") or os.environ.get("AWS_REGION", "")
+        self.region = os.environ.get("LOCATION_REGION") or os.environ.get(
+            "AWS_REGION", ""
+        )
         self.language = os.environ.get("LOCATION_LANGUAGE", "en")
         self.max_results = int(os.environ.get("LOCATION_MAX_RESULTS", "1"))
         self.label_format = os.environ.get("LOCATION_LABEL_FORMAT", "short").lower()
@@ -101,7 +103,10 @@ class LocationResolver:
 
             results = resp.get("Results") or []
             if not results:
-                logger.info("Amazon Location: no reverse-geocode results", extra={"lat": latitude, "lon": longitude})
+                logger.info(
+                    "Amazon Location: no reverse-geocode results",
+                    extra={"lat": latitude, "lon": longitude},
+                )
                 return base
 
             top = results[0] or {}
@@ -119,7 +124,11 @@ class LocationResolver:
             address_number = place.get("AddressNumber")
 
             # Build a "short" label for alerts
-            parts_short = [p for p in [neighbourhood, municipality, subregion, region, country] if p]
+            parts_short = [
+                p
+                for p in [neighbourhood, municipality, subregion, region, country]
+                if p
+            ]
             short_label = ", ".join(parts_short) if parts_short else None
 
             # Build a structured address dict for storage/search
@@ -144,7 +153,9 @@ class LocationResolver:
 
             place_id = place.get("PlaceId")
 
-            resolved_label = label if self.label_format == "full" else (short_label or label)
+            resolved_label = (
+                label if self.label_format == "full" else (short_label or label)
+            )
             if not resolved_label:
                 resolved_label = _fmt_coord_label(latitude, longitude)
 
@@ -155,7 +166,11 @@ class LocationResolver:
                 "address": address,
                 "place": {
                     "place_id": place_id,
-                    "provider_geometry": {"lat": provider_lat, "lon": provider_lon} if provider_lat and provider_lon else {},
+                    "provider_geometry": (
+                        {"lat": provider_lat, "lon": provider_lon}
+                        if provider_lat and provider_lon
+                        else {}
+                    ),
                     "raw": {},
                 },
             }
@@ -173,6 +188,8 @@ class LocationResolver:
             return out
 
         except Exception as e:
-            logger.exception("Amazon Location reverse-geocode failed", extra={"error": str(e)})
+            logger.exception(
+                "Amazon Location reverse-geocode failed", extra={"error": str(e)}
+            )
             base["resolved_by"] = "amazon_location_error"
             return base
