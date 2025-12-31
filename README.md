@@ -38,7 +38,7 @@ OpenLEWS implements a paradigm shift from regional probabilistic forecasting to 
 
 1. **Multi-Sensor Fusion**: IoT sensors measuring soil moisture, tilt, vibration, pore pressure, and safety factor
 2. **Neuro-Symbolic AI**: Combines weighted risk scoring with rule-based geological reasoning
-3. **RAG-Enhanced Context**: Retrieval-Augmented Generation using NDIS geological hazard zone data
+3. **RAG-Enhanced Context**: Retrieval-Augmented Generation using NSDI geological hazard zone data
 4. **LLM Alert Generation**: Context-aware warnings via Amazon Bedrock (Claude 3 Haiku)
 
 ---
@@ -66,7 +66,7 @@ Interactive view: [OpenLEWS-Architecture-V2](https://akilada.github.io/openlews-
 │   ┌──────────────────────────────────────────────────────────────────────┐  │
 │   │                    Telemetry Ingestor Lambda                         │  │
 │   │  - TelemetryValidator (required fields, range validation)            │  │
-│   │  - NDISEnricher (geohash4 lookup, bounding box containment)          │  │
+│   │  - NSDIEnricher (geohash4 lookup, bounding box containment)          │  │
 │   │  - TelemetryWriter (DynamoDB batch write, 30-day TTL)                │  │
 │   │  - EventBridgePublisher (high-risk event publishing)                 │  │
 │   └──────────────────────────────────────────────────────────────────────┘  │
@@ -179,7 +179,7 @@ openlews-prototype-v2/
 │   └── data_ingestion/
 │       └── NSDI/
 │           ├── rag_pipeline/
-│           │   ├── ndis_rag_pipeline.py    # Main pipeline
+│           │   ├── nsdi_rag_pipeline.py    # Main pipeline
 │           │   ├── geo_processor.py        # Shared processor
 │           │   └── process_backup.py       # Backup processor
 │           └── scripts/
@@ -200,7 +200,7 @@ Receives and processes sensor telemetry:
 | Component | Function |
 |-----------|----------|
 | `TelemetryValidator` | Validates required fields, ranges, timestamps |
-| `NDISEnricher` | Enriches with hazard zone data via geohash4 lookup |
+| `NSDIEnricher` | Enriches with hazard zone data via geohash4 lookup |
 | `TelemetryWriter` | Batch writes to DynamoDB with 30-day TTL |
 | `EventBridgePublisher` | Publishes high-risk events (moisture ≥85%, etc.) |
 
@@ -253,9 +253,9 @@ Geological context retrieval:
 - 9-cell expansion (center + 8 neighbors)
 - Haversine distance filtering
 
-### 4. NDIS Data Ingestion Pipeline
+### 4. NSDI Data Ingestion Pipeline
 
-Processes NDIS ArcGIS REST API data:
+Processes NSDI ArcGIS REST API data:
 
 | Component | Function |
 |-----------|----------|
@@ -266,7 +266,7 @@ Processes NDIS ArcGIS REST API data:
 | `PineconeIngester` | Vector upserts (100 per batch) |
 
 **Data Statistics:**
-- 19,000+ NDIS hazard zones for Badulla region
+- 19,000+ NSDI hazard zones for Badulla region
 - Hazard distribution: High 42.8%, Moderate 35.8%, Low 12.8%, Very High 8.6%
 
 ---
@@ -369,7 +369,7 @@ terragrunt plan
 terragrunt apply
 ```
 
-### NDIS Data Ingestion
+### NSDI Data Ingestion
 
 ```bash
 cd src/data_ingestion/NSDI
@@ -381,10 +381,10 @@ export PINECONE_API_KEY=pinecone-api-key
 export PINECONE_INDEX_NAME=pinecone-index-name
 
 # Run pipeline
-python rag_pipeline/ndis_rag_pipeline.py
+python rag_pipeline/nsdi_rag_pipeline.py
 
 # Or with bounds filter for Badulla region
-python rag_pipeline/ndis_rag_pipeline.py --filter-bounds 6.8,7.2,80.8,81.2
+python rag_pipeline/nsdi_rag_pipeline.py --filter-bounds 6.8,7.2,80.8,81.2
 ```
 
 ### Testing Telemetry Ingestion
@@ -458,7 +458,7 @@ Budget alert configured at $15/month.
 | Detection Engine | [src/lambdas/detector/README.md](src/lambdas/detector/README.md) |
 | Telemetry Ingestor | [src/lambdas/telemetry_ingestor/README.md](src/lambdas/telemetry_ingestor/README.md) |
 | RAG Query Engine | [src/lambdas/rag/README.md](src/lambdas/rag/README.md) |
-| NDIS Data Ingestion | [src/data_ingestion/NSDI/README.md](src/data_ingestion/NSDI/README.md) |
+| NSDI Data Ingestion | [src/data_ingestion/NSDI/README.md](src/data_ingestion/NSDI/README.md) |
 | Infrastructure | [infrastructure/README.md](infrastructure/README.md) |
 
 ---
@@ -484,7 +484,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - **NBRO Sri Lanka**: Landslide hazard zonation data and research collaboration
-- **NDIS Sri Lanka**: Geospatial hazard zone data via ArcGIS REST API
+- **NSDI Sri Lanka**: Geospatial hazard zone data via ArcGIS REST API
 - **Anthropic**: Claude models for neuro-symbolic reasoning
 - **AWS**: Cloud infrastructure, Bedrock, and Location Service
 - **Google Gemini**: Deep Research on Landslides and Fact checking
