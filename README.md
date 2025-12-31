@@ -460,6 +460,7 @@ Budget alert configured at $15/month.
 | RAG Query Engine | [src/lambdas/rag/README.md](src/lambdas/rag/README.md) |
 | NSDI Data Ingestion | [src/data_ingestion/NSDI/README.md](src/data_ingestion/NSDI/README.md) |
 | Infrastructure | [infrastructure/README.md](infrastructure/README.md) |
+| Roadmap | [docs/roadmap/README.md](docs/roadmap/README.md) |
 
 ---
 
