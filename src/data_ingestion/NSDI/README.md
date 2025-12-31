@@ -20,7 +20,7 @@ This data enables the RAG Query Engine to provide geological context for sensor 
 ```
 src/data_ingestion/NSDI/
 ├── rag_pipeline/
-│   ├── ndis_rag_pipeline.py    # Main pipeline: download → process → ingest
+│   ├── nsdi_rag_pipeline.py    # Main pipeline: download → process → ingest
 │   ├── geo_processor.py        # Shared GeoJSON processing utilities
 │   └── process_backup.py       # Process existing backup files
 ├── scripts/
@@ -314,19 +314,19 @@ python scripts/setup_pinecone_index.py
 
 ```bash
 # Download and ingest ALL records
-python rag_pipeline/ndis_rag_pipeline.py
+python rag_pipeline/nsdi_rag_pipeline.py
 
 # Filter by geographic bounds (for testing)
-python rag_pipeline/ndis_rag_pipeline.py --filter-bounds 6.8,7.2,80.8,81.2
+python rag_pipeline/nsdi_rag_pipeline.py --filter-bounds 6.8,7.2,80.8,81.2
 
 # Limit number of records
-python rag_pipeline/ndis_rag_pipeline.py --limit 1000
+python rag_pipeline/nsdi_rag_pipeline.py --limit 1000
 
 # Skip Pinecone upload (DynamoDB only)
-python rag_pipeline/ndis_rag_pipeline.py --skip-pinecone
+python rag_pipeline/nsdi_rag_pipeline.py --skip-pinecone
 
 # Dry run (process but don't upload)
-python rag_pipeline/ndis_rag_pipeline.py --dry-run
+python rag_pipeline/nsdi_rag_pipeline.py --dry-run
 ```
 
 ### Process Existing Backup

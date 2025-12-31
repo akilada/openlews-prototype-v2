@@ -60,7 +60,7 @@ out={
   "lat": getN("latitude"),
   "lon": getN("longitude"),
   "geohash": getS("geohash"),
-  "ndis_enrichment": it.get("ndis_enrichment"),
+  "nsdi_enrichment": it.get("nsdi_enrichment"),
 }
 if out["lat"] is None or out["lon"] is None or out["geohash"] is None:
     raise SystemExit("Anchor record missing latitude/longitude/geohash")
@@ -84,7 +84,7 @@ anchor=json.load(open("${WORKDIR}/anchor_parsed.json","r",encoding="utf-8"))
 lat0=float(anchor["lat"])
 lon0=float(anchor["lon"])
 gh=anchor["geohash"]
-ndis=anchor.get("ndis_enrichment")
+nsdi=anchor.get("nsdi_enrichment")
 
 # Offsets in metres (keep within 50m)
 # (north/south/east/west + centre)
@@ -133,8 +133,8 @@ for i in range(cluster_size):
       "vibration_baseline": {"N": "5"},
     }
 
-    if ndis:
-      item["ndis_enrichment"]=ndis
+    if nsdi:
+      item["nsdi_enrichment"]=nsdi
       item["enriched"]={"BOOL": True}
 
     print(json.dumps(item))

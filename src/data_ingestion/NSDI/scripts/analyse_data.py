@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Analyze NDIS hazard zone distribution in DynamoDB and Pinecone
+Analyze NSDI hazard zone distribution in DynamoDB and Pinecone
 """
 
 import os
@@ -146,7 +146,7 @@ def find_very_high_zones():
         print("\n⚠️  No 'Very High' hazard zones found in DynamoDB")
         print("\nPossible reasons:")
         print("1. Your filter region (6.8-7.2, 80.8-81.2) has no Very High zones")
-        print("2. NDIS classifies this area as mostly Moderate/High risk")
+        print("2. NSDI classifies this area as mostly Moderate/High risk")
         print("3. Very High zones might be in different regions (Ratnapura, Kegalle)")
 
 
@@ -189,7 +189,7 @@ def test_specific_queries():
 
 def main():
     print("=" * 60)
-    print("🔬 NDIS Hazard Zone Data Analysis")
+    print("🔬 NSDI Hazard Zone Data Analysis")
     print("=" * 60)
 
     db_levels = analyze_dynamodb()

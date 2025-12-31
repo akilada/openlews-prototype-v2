@@ -81,7 +81,7 @@ inputs = {
   geohash_precision            = local.env_cfg.locals.geohash_precision
 
   # Lambda Telemetry Ingestor
-  enable_ndis_enrichment = local.env_cfg.locals.enable_ndis_enrichment
+  enable_nsdi_enrichment = local.env_cfg.locals.enable_nsdi_enrichment
   enable_eventbridge     = local.env_cfg.locals.enable_eventbridge
 
   # Lambda Detector

@@ -47,7 +47,7 @@ variable "geohash_index_name" { type = string }
 variable "geohash_precision" { type = number }
 
 # Lambda Telemetry Ingestor
-variable "enable_ndis_enrichment" { type = bool }
+variable "enable_nsdi_enrichment" { type = bool }
 variable "enable_eventbridge" { type = bool }
 
 # Lambda Detector

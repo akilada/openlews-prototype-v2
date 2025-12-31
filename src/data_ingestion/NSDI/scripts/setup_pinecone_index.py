@@ -209,7 +209,7 @@ def describe_index(pc: Pinecone, index_name: str) -> None:
 
 def main() -> None:
     print("=" * 60)
-    print("🌲 Pinecone Index Setup for NDIS RAG Pipeline")
+    print("🌲 Pinecone Index Setup for NSDI RAG Pipeline")
     print("=" * 60)
 
     api_key = get_api_key()
@@ -227,7 +227,7 @@ def main() -> None:
         print(f"✓ Index '{INDEX_NAME}' already exists!")
         describe_index(pc, INDEX_NAME)
         print("\n✅ You're all set! No need to create a new index.")
-        print("\nNext: python ndis_rag_pipeline.py")
+        print("\nNext: python nsdi_rag_pipeline.py")
         return
 
     print(f"❌ Index '{INDEX_NAME}' does not exist.")
@@ -258,8 +258,8 @@ def main() -> None:
     print("\nNext steps:")
     print("1. Install embeddings dependency (if used by ingestion):")
     print("   pip install sentence-transformers")
-    print("2. Run the NDIS ingestion pipeline:")
-    print("   python ndis_rag_pipeline.py")
+    print("2. Run the NSDI ingestion pipeline:")
+    print("   python nsdi_rag_pipeline.py")
     print("=" * 60)
 
 

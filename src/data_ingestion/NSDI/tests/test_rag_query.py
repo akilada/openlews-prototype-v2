@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test RAG Query Script for NDIS Hazard Zones (Demo-Grade MVP)
+Test RAG Query Script for NSDI Hazard Zones (Demo-Grade MVP)
 
 Key improvements (minimal but high impact):
 - Auto-applies metadata filters when query mentions hazard severity (high/moderate/low/critical).
@@ -230,7 +230,7 @@ def initialize_rag_system():
 
     if total_vectors == 0:
         print("\n⚠️  Warning: Index is empty!")
-        print("Populate it using your NDIS pipeline first.")
+        print("Populate it using your NSDI pipeline first.")
 
     return model, index
 
@@ -508,7 +508,7 @@ def main():
 
     # Menu
     print("\n" + "=" * 70)
-    print("🎯 NDIS RAG Query Test")
+    print("🎯 NSDI RAG Query Test")
     print("=" * 70)
     print("\nWhat would you like to do?")
     print("1. Run demo queries (smart filters)")

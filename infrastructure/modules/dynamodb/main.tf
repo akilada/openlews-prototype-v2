@@ -195,7 +195,7 @@ resource "aws_kms_alias" "dynamodb" {
   target_key_id = aws_kms_key.dynamodb.key_id
 }
 
-# Hazard Zones Table (NDIS Data)
+# Hazard Zones Table (NSDI Data)
 
 resource "aws_dynamodb_table" "hazard_zones" {
   name         = "${var.name_prefix}-hazard-zones"
@@ -265,7 +265,7 @@ resource "aws_dynamodb_table" "hazard_zones" {
 
   tags = merge(local.common_tags, {
     Name        = "${var.name_prefix}-hazard-zones"
-    Description = "NDIS landslide hazard zone data for RAG queries"
+    Description = "NSDI landslide hazard zone data for RAG queries"
   })
 
   lifecycle {

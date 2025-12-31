@@ -21,7 +21,7 @@ eventbridge = boto3.client("events")
 TELEMETRY_TABLE = os.getenv("TELEMETRY_TABLE", "")
 HAZARD_ZONES_TABLE = os.getenv("HAZARD_ZONES_TABLE", "")
 EVENT_BUS = os.getenv("EVENT_BUS", "default")
-ENABLE_NDIS_ENRICHMENT = os.getenv("ENABLE_NDIS_ENRICHMENT", "true").lower() == "true"
+ENABLE_NSDI_ENRICHMENT = os.getenv("ENABLE_NSDI_ENRICHMENT", "true").lower() == "true"
 ENABLE_EVENTBRIDGE = os.getenv("ENABLE_EVENTBRIDGE", "true").lower() == "true"
 
 telemetry_table = dynamodb.Table(TELEMETRY_TABLE)
@@ -177,7 +177,7 @@ def point_in_bbox(lat: float, lon: float, bbox: Dict) -> bool:
         return False
 
 
-class NDISEnricher:
+class NSDIEnricher:
     """
     Enrich telemetry with hazard-zone data.
 
@@ -284,7 +284,7 @@ class NDISEnricher:
         if geohash and lat is not None and lon is not None:
             zone_data = self.get_hazard_zone(geohash, float(lat), float(lon))
             if zone_data:
-                telemetry["ndis_enrichment"] = zone_data
+                telemetry["nsdi_enrichment"] = zone_data
                 telemetry["enriched"] = True
             else:
                 telemetry["enriched"] = False
@@ -368,9 +368,9 @@ class EventBridgePublisher:
         ):
             return True
 
-        ndis = telemetry.get("ndis_enrichment", {})
+        nsdi = telemetry.get("nsdi_enrichment", {})
         if (
-            ndis.get("hazard_level") in ["High", "Very High"]
+            nsdi.get("hazard_level") in ["High", "Very High"]
             and telemetry.get("moisture_percent", 0) > 70
         ):
             return True
@@ -392,7 +392,7 @@ class EventBridgePublisher:
                         "moisture_percent": telemetry.get("moisture_percent"),
                         "pore_pressure_kpa": telemetry.get("pore_pressure_kpa"),
                         "safety_factor": telemetry.get("safety_factor"),
-                        "hazard_level": telemetry.get("ndis_enrichment", {}).get(
+                        "hazard_level": telemetry.get("nsdi_enrichment", {}).get(
                             "hazard_level"
                         ),
                         "alert_reason": "Critical thresholds exceeded",
@@ -435,7 +435,7 @@ def lambda_handler(event, context):
         logger.info(f"Processing {len(telemetry_batch)} telemetry records")
 
         validator = TelemetryValidator()
-        enricher = NDISEnricher(hazard_zones_table) if ENABLE_NDIS_ENRICHMENT else None
+        enricher = NSDIEnricher(hazard_zones_table) if ENABLE_NSDI_ENRICHMENT else None
         writer = TelemetryWriter(telemetry_table)
 
         validated = []

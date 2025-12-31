@@ -68,7 +68,7 @@ locals {
   create_telemetry_table = true
 
   # Feature flags
-  enable_ndis_enrichment = true
+  enable_nsdi_enrichment = true
   enable_eventbridge     = true
 
   # API Gateway Authentication & Rate Limiting

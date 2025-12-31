@@ -82,7 +82,7 @@ module "lambda_telemetry_ingestor" {
   hazard_zones_table_name       = module.dynamodb.hazard_zones_table_name
   hazard_zones_table_arn        = module.dynamodb.hazard_zones_table_arn
   dynamodb_kms_arn              = module.dynamodb.kms_key_arn
-  enable_ndis_enrichment        = var.enable_ndis_enrichment
+  enable_nsdi_enrichment        = var.enable_nsdi_enrichment
   enable_eventbridge            = var.enable_eventbridge
   cloudwatch_log_retention_days = var.cloudwatch_log_retention_days
   lambda_timeout_seconds        = var.lambda_timeout_seconds

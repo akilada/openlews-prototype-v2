@@ -1,5 +1,5 @@
 # RAG Query Lambda - Terraform Module
-# Connects sensor locations to NDIS hazard zones
+# Connects sensor locations to NSDI hazard zones
 
 terraform {
   required_version = ">= 1.0"

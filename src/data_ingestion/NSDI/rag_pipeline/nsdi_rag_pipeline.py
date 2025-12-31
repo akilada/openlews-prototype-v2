@@ -8,19 +8,19 @@ Uses shared GeoJSONProcessor for consistent geohash handling.
 
 Usage:
     # Download and process all records
-    python ndis_rag_pipeline.py
+    python nsdi_rag_pipeline.py
 
     # Filter by bounds (for testing with smaller dataset)
-    python ndis_rag_pipeline.py --filter-bounds 6.8,7.2,80.8,81.2
+    python nsdi_rag_pipeline.py --filter-bounds 6.8,7.2,80.8,81.2
 
     # Limit records (for testing)
-    python ndis_rag_pipeline.py --limit 1000
+    python nsdi_rag_pipeline.py --limit 1000
 
     # Skip Pinecone upload
-    python ndis_rag_pipeline.py --skip-pinecone
+    python nsdi_rag_pipeline.py --skip-pinecone
 
     # Dry run (don't upload, just process)
-    python ndis_rag_pipeline.py --dry-run
+    python nsdi_rag_pipeline.py --dry-run
 """
 
 import requests
@@ -465,7 +465,7 @@ def main():
     # Save raw data backup
     if not args.skip_backup:
         print("\n💾 Saving raw GeoJSON backup...")
-        backup_filename = "ndis_raw_backup.json"
+        backup_filename = "nsdi_raw_backup.json"
         with open(backup_filename, "w") as f:
             json.dump({"type": "FeatureCollection", "features": features}, f)
         print(f"  ✓ Saved to {backup_filename}")

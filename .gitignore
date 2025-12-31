@@ -252,9 +252,9 @@ docs/nbro-reports/*.pdf
 # Keep directory structure
 !**/.gitkeep
 
-# NDIS backup
-**/ndis_raw_backup.json
-**/ndis_raw_backup-*.json
+# NSDI backup
+**/nsdi_raw_backup.json
+**/nsdi_raw_backup-*.json
 
 # Ignore Lambda builds
 .build/

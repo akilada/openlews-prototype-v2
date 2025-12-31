@@ -121,7 +121,7 @@ The script reads from environment variables (with defaults):
 | `AWS_REGION` | `ap-southeast-2` | AWS region |
 | `TELEMETRY_TABLE` | `openlews-dev-telemetry` | Telemetry DynamoDB table |
 | `ALERTS_TABLE` | `openlews-dev-alerts` | Alerts DynamoDB table |
-| `HAZARD_ZONES_TABLE` | `openlews-dev-hazard-zones` | NDIS hazard zones table |
+| `HAZARD_ZONES_TABLE` | `openlews-dev-hazard-zones` | NSDI hazard zones table |
 | `DETECTOR_LAMBDA` | `openlews-dev-detector` | Detector Lambda function |
 | `RAG_LAMBDA` | `openlews-dev-rag-query` | RAG Query Lambda function |
 
@@ -270,7 +270,7 @@ pip install boto3
 - [Detection Engine](src/lambdas/detector/README.md)
 - [RAG Query Engine](src/lambdas/rag/README.md)
 - [Telemetry Ingestor](src/lambdas/telemetry_ingestor/README.md)
-- [NDIS Data Ingestion](src/data_ingestion/NSDI/README.md)
+- [NSDI Data Ingestion](src/data_ingestion/NSDI/README.md)
 
 ---
 

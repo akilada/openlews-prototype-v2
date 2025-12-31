@@ -162,7 +162,7 @@ DynamoDB tables for data storage:
 | Table | Purpose | Keys |
 |-------|---------|------|
 | Telemetry | Sensor readings | PK: sensor_id, SK: timestamp |
-| Hazard Zones | NDIS zone data | PK: zone_id, GSI: GeoHashIndex |
+| Hazard Zones | NSDI zone data | PK: zone_id, GSI: GeoHashIndex |
 | Alerts | Detection alerts | PK: alert_id, SK: created_at |
 
 ### `modules/s3`
@@ -273,7 +273,7 @@ locals {
   geohash_precision  = 4
 
   # Feature Flags
-  enable_ndis_enrichment = true
+  enable_nsdi_enrichment = true
   enable_eventbridge     = true
 
   # API Gateway
@@ -385,7 +385,7 @@ inputs = {
 
 | Variable | Type | Description |
 |----------|------|-------------|
-| `enable_ndis_enrichment` | bool | Enable hazard zone enrichment |
+| `enable_nsdi_enrichment` | bool | Enable hazard zone enrichment |
 | `enable_eventbridge` | bool | Publish high-risk events |
 
 ### Detector Variables

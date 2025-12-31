@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Quick test to verify NDIS data processing works with your actual data
+Quick test to verify NSDI data processing works with your actual data
 """
 
 from decimal import Decimal
@@ -10,7 +10,7 @@ from typing import Dict, Any
 
 # Paste the GeoJSONProcessor class here
 class GeoJSONProcessor:
-    """Processes NDIS GeoJSON features for storage"""
+    """Processes NSDI GeoJSON features for storage"""
 
     @staticmethod
     def calculate_geohash(lat: float, lon: float, precision: int = 6) -> str:
@@ -24,7 +24,7 @@ class GeoJSONProcessor:
         if not geometry:
             return (0, 0)
 
-        # ArcGIS format (NDIS uses this)
+        # ArcGIS format (NSDI uses this)
         if "rings" in geometry:
             rings = geometry["rings"][0]  # First ring = exterior boundary
 
@@ -67,13 +67,13 @@ class GeoJSONProcessor:
         attributes = feature.get("attributes", {})
         geometry = feature.get("geometry", {})
 
-        # Generate unique zone ID from objectid (NDIS uses lowercase)
+        # Generate unique zone ID from objectid (NSDI uses lowercase)
         objectid = (
             attributes.get("objectid")
             or attributes.get("OBJECTID")
             or attributes.get("id")
         )
-        zone_id = f"NDIS_{objectid}" if objectid else "NDIS_UNKNOWN"
+        zone_id = f"NSDI_{objectid}" if objectid else "NSDI_UNKNOWN"
 
         # Extract centroid for spatial queries
         centroid_lat, centroid_lon = GeoJSONProcessor.extract_centroid(geometry)
@@ -81,7 +81,7 @@ class GeoJSONProcessor:
         # Calculate geohash for spatial indexing
         geohash = GeoJSONProcessor.calculate_geohash(centroid_lat, centroid_lon)
 
-        # Determine hazard level (NDIS uses 'level' field, lowercase)
+        # Determine hazard level (NSDI uses 'level' field, lowercase)
         level = (
             attributes.get("level")
             or attributes.get("Level")
@@ -109,7 +109,7 @@ class GeoJSONProcessor:
                 "raw_attributes": GeoJSONProcessor.convert_to_decimal(attributes),
             },
             "created_at": int(datetime.utcnow().timestamp() * 1000),
-            "source": "NDIS_API",
+            "source": "NSDI_API",
         }
 
         return item
@@ -136,7 +136,7 @@ test_feature = {
     },
 }
 
-print("Testing NDIS data processing...")
+print("Testing NSDI data processing...")
 print("=" * 60)
 
 try:
@@ -153,8 +153,8 @@ try:
     print(f"  Area: {result['metadata']['shape_area']}")
 
     print("\n" + "=" * 60)
-    print("✅ Your NDIS data will process correctly!")
-    print("Run: python ndis_rag_pipeline.py")
+    print("✅ Your NSDI data will process correctly!")
+    print("Run: python nsdi_rag_pipeline.py")
 
 except Exception as e:
     print(f"❌ ERROR: {e}")

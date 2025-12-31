@@ -33,7 +33,7 @@ variable "telemetry_table_name" {
 }
 
 variable "hazard_zones_table_name" {
-  description = "DynamoDB table name for hazard zones (NDIS data)"
+  description = "DynamoDB table name for hazard zones (NSDI data)"
   type        = string
 }
 
@@ -53,8 +53,8 @@ variable "dynamodb_kms_arn" {
   type        = string
 }
 
-variable "enable_ndis_enrichment" {
-  description = "Enable NDIS enrichment feature"
+variable "enable_nsdi_enrichment" {
+  description = "Enable NSDI enrichment feature"
   type        = bool
   default     = true
 }
@@ -184,7 +184,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
         ]
         Resource = "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${var.telemetry_table_name}"
       },
-      # DynamoDB - Read from Hazard Zones Table (NDIS enrichment)
+      # DynamoDB - Read from Hazard Zones Table (NSDI enrichment)
       {
         Effect = "Allow"
         Action = [
@@ -235,7 +235,7 @@ resource "aws_lambda_function" "ingestor" {
       TELEMETRY_TABLE        = var.telemetry_table_name
       HAZARD_ZONES_TABLE     = var.hazard_zones_table_name
       EVENT_BUS              = "default"
-      ENABLE_NDIS_ENRICHMENT = var.enable_ndis_enrichment ? "true" : "false"
+      ENABLE_NSDI_ENRICHMENT = var.enable_nsdi_enrichment ? "true" : "false"
       ENABLE_EVENTBRIDGE     = var.enable_eventbridge ? "true" : "false"
       LOG_LEVEL              = var.environment == "prod" ? "INFO" : "DEBUG"
       HAZARD_GEOHASH_INDEX   = var.geohash_index_name

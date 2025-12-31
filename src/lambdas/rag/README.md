@@ -6,7 +6,7 @@
 
 ## Overview
 
-The RAG Query Engine connects sensor locations to NDIS hazard zones using DynamoDB's GeoHashIndex. It provides fast geospatial queries to retrieve relevant geological context for landslide risk assessment.
+The RAG Query Engine connects sensor locations to NSDI hazard zones using DynamoDB's GeoHashIndex. It provides fast geospatial queries to retrieve relevant geological context for landslide risk assessment.
 
 This component enables **Strategy A: Contextual Verification** by looking up the hazard zone characteristics for any given sensor location, allowing the detection engine to validate sensor anomalies against geological reality.
 
@@ -270,7 +270,7 @@ Semantic search using Pinecone (not yet implemented):
 
 The Lambda expects a DynamoDB table with the following structure:
 
-### Table: NDISHazardZones
+### Table: NSDIHazardZones
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -307,7 +307,7 @@ The Lambda expects a DynamoDB table with the following structure:
 AWS_REGION=<region>>
 
 # DynamoDB
-DYNAMODB_TABLE_NAME=NDISHazardZones
+DYNAMODB_TABLE_NAME=NSDIHazardZones
 GEOHASH_INDEX_NAME=GeoHashIndex
 GEOHASH_PRECISION=4
 
@@ -478,7 +478,7 @@ print(f"Nearest zone: {result.get('nearest_zone', {}).get('zone_id')}")
 ```bash
 # Check that zones are indexed with correct geohash precision
 aws dynamodb query \
-  --table-name NDISHazardZones \
+  --table-name NSDIHazardZones \
   --index-name GeoHashIndex \
   --key-condition-expression "geohash = :gh" \
   --expression-attribute-values '{":gh": {"S": "tc1x"}}' \
@@ -499,5 +499,5 @@ aws dynamodb query \
 ## Related Components
 
 - [Detection Engine](../detector/README.md) - Primary consumer of hazard zone data
-- [NDIS Data Loader](../../data_ingestion/NSDI/README.md) - Populates hazard zone data
+- [NSDI Data Loader](../../data_ingestion/NSDI/README.md) - Populates hazard zone data
 - [Infrastructure](../../infrastructure/README.md) - DynamoDB table and GSI setup

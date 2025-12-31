@@ -1,12 +1,12 @@
 # Telemetry Ingestor Lambda
 
-**Sensor Telemetry Ingestion with Validation, NDIS Enrichment, and High-Risk Event Publishing**
+**Sensor Telemetry Ingestion with Validation, NSDI Enrichment, and High-Risk Event Publishing**
 
 ---
 
 ## Overview
 
-The Telemetry Ingestor Lambda receives sensor telemetry data, validates it, enriches it with NDIS hazard zone information, writes it to DynamoDB, and publishes high-risk events to EventBridge for downstream processing.
+The Telemetry Ingestor Lambda receives sensor telemetry data, validates it, enriches it with NSDI hazard zone information, writes it to DynamoDB, and publishes high-risk events to EventBridge for downstream processing.
 
 ---
 
@@ -24,7 +24,7 @@ The Telemetry Ingestor Lambda receives sensor telemetry data, validates it, enri
 │  └──────────────┘    └──────────────────────────────────────────────┘  │
 │                                    ↓                                   │
 │  ┌──────────────────────────────────────────────────────────────────┐  │
-│  │                    NDISEnricher                                  │  │
+│  │                    NSDIEnricher                                  │  │
 │  │  - Query hazard zones by geohash4                                │  │
 │  │  - Bounding box containment check                                │  │
 │  │  - Pick highest-risk zone                                        │  │
@@ -86,12 +86,12 @@ class TelemetryValidator:
 - Numeric fields within defined ranges
 - geohash is string with length ≥ 4
 
-### 2. NDISEnricher
+### 2. NSDIEnricher
 
-Enriches telemetry with hazard zone data from NDIS:
+Enriches telemetry with hazard zone data from NSDI:
 
 ```python
-class NDISEnricher:
+class NSDIEnricher:
     """Enrich telemetry with hazard-zone data using GeoHashIndex."""
 
     HAZARD_RANK = {"Very High": 4, "High": 3, "Moderate": 2, "Low": 1, "Unknown": 0}
@@ -103,12 +103,12 @@ class NDISEnricher:
         """
 
     def enrich_telemetry(self, telemetry: Dict) -> Dict:
-        """Add ndis_enrichment field to telemetry."""
+        """Add nsdi_enrichment field to telemetry."""
 ```
 
 **Enrichment Fields Added:**
 - `hazard_level` - Very High, High, Moderate, Low
-- `hazard_zone_id` - NDIS zone identifier
+- `hazard_zone_id` - NSDI zone identifier
 - `district` - Administrative district
 - `ds_division` - Divisional Secretariat
 - `gn_division` - Grama Niladhari division
@@ -264,7 +264,7 @@ def geohash_neighbors_8(geohash6: str) -> List[str]:
   "temperature_c": 24.5,
   "safety_factor": 1.8,
   "tilt_rate_mm_hr": 2.1,
-  "ndis_enrichment": {
+  "nsdi_enrichment": {
     "hazard_level": "High",
     "hazard_zone_id": "NSDI_12345",
     "district": "Badulla",
@@ -315,7 +315,7 @@ HAZARD_ZONES_TABLE=openlews-dev-hazard-zones
 EVENT_BUS=openlews-events
 
 # Feature Flags
-ENABLE_NDIS_ENRICHMENT=true
+ENABLE_NSDI_ENRICHMENT=true
 ENABLE_EVENTBRIDGE=true
 
 # Hazard Zone Index
@@ -330,7 +330,7 @@ LOG_LEVEL=INFO
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| ENABLE_NDIS_ENRICHMENT | true | Query NDIS hazard zones for context |
+| ENABLE_NSDI_ENRICHMENT | true | Query NSDI hazard zones for context |
 | ENABLE_EVENTBRIDGE | true | Publish high-risk events |
 
 ---
@@ -347,7 +347,7 @@ LOG_LEVEL=INFO
    │   ├── Pass → Continue
    │   └── Fail → Add to validation_errors, skip
    │
-   ├── Enrich (NDISEnricher) if ENABLE_NDIS_ENRICHMENT
+   ├── Enrich (NSDIEnricher) if ENABLE_NSDI_ENRICHMENT
    │   ├── Query by geohash4
    │   ├── Filter by bounding box containment
    │   └── Pick highest-risk zone
@@ -375,16 +375,16 @@ LOG_LEVEL=INFO
 | Invalid timestamp | Skip record, add to validation_errors |
 | DynamoDB write failure | Log error, continue with other records |
 | EventBridge publish failure | Log error, continue processing |
-| NDIS query failure | Log error, skip enrichment for record |
+| NSDI query failure | Log error, skip enrichment for record |
 
 ---
 
 ## Caching
 
-The NDISEnricher caches hazard zone queries by geohash4:
+The NSDIEnricher caches hazard zone queries by geohash4:
 
 ```python
-class NDISEnricher:
+class NSDIEnricher:
     def __init__(self, hazard_table):
         self.cache = {}  # geohash4 -> list of zones
     
@@ -501,4 +501,4 @@ logger.info(f"Published high-risk event for {telemetry['sensor_id']}")
 
 - [Detection Engine](../detector/README.md) - Consumes EventBridge events
 - [RAG Query Engine](../rag/README.md) - Alternative hazard zone lookup
-- [NDIS Data Ingestion](../../data_ingestion/NSDI/README.md) - Hazard zone data source
+- [NSDI Data Ingestion](../../data_ingestion/NSDI/README.md) - Hazard zone data source
