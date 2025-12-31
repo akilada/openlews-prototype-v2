@@ -121,7 +121,7 @@ def analyze_sensors(telemetry_data: Dict[str, List[Dict]]) -> Dict:
 async def process_high_risk_detections(analysis: Dict) -> List[Dict]:
     """
     Process detections exceeding risk threshold with LLM reasoning.
-    
+
     Now includes per-cluster error handling to prevent one failure
     from stopping all processing.
 
@@ -145,7 +145,7 @@ async def process_high_risk_detections(analysis: Dict) -> List[Dict]:
                 cluster_id = f"CLUSTER_{cluster['center_sensor']}"
                 logger.error(
                     f"Failed to process cluster {cluster_id}",
-                    extra={"error": str(e), "cluster_size": cluster["size"]}
+                    extra={"error": str(e), "cluster_size": cluster["size"]},
                 )
                 errors.append({"cluster_id": cluster_id, "error": str(e)})
                 # Continue processing other clusters
@@ -163,16 +163,16 @@ async def process_high_risk_detections(analysis: Dict) -> List[Dict]:
                 except Exception as e:
                     logger.error(
                         f"Failed to process sensor {sensor_id}",
-                        extra={"error": str(e), "risk": data["composite_risk"]}
+                        extra={"error": str(e), "risk": data["composite_risk"]},
                     )
                     errors.append({"sensor_id": sensor_id, "error": str(e)})
                     # Continue processing other sensors
-    
+
     # Log summary of errors
     if errors:
         logger.warning(
             f"Completed with {len(errors)} errors",
-            extra={"errors": errors, "successful": len(alerts_processed)}
+            extra={"errors": errors, "successful": len(alerts_processed)},
         )
 
     return alerts_processed
@@ -502,22 +502,24 @@ def lambda_handler(event: Dict, context: LambdaContext) -> Dict:
 
     except Exception as e:
         logger.exception("Error in detector lambda")
-        
+
         partial_info = {}
         try:
-            if 'analysis' in locals():
+            if "analysis" in locals():
                 partial_info["sensors_analyzed"] = len(analysis.get("sensor_risks", {}))
                 partial_info["clusters_detected"] = len(analysis.get("clusters", []))
-            if 'alerts' in locals():
+            if "alerts" in locals():
                 partial_info["alerts_processed_before_error"] = len(alerts)
         except Exception:
             pass
-        
+
         return {
             "statusCode": 500,
-            "body": json.dumps({
-                "status": "error", 
-                "error": str(e),
-                "partial_results": partial_info,
-            }),
+            "body": json.dumps(
+                {
+                    "status": "error",
+                    "error": str(e),
+                    "partial_results": partial_info,
+                }
+            ),
         }

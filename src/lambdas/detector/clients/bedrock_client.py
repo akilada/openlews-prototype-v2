@@ -397,7 +397,11 @@ Keep it concise and actionable."""
 
                 logger.warning(
                     f"Bedrock call failed: {msg}",
-                    extra={"attempt": attempt, "error_code": code, "retryable": retryable},
+                    extra={
+                        "attempt": attempt,
+                        "error_code": code,
+                        "retryable": retryable,
+                    },
                 )
 
                 if not retryable or attempt == max_attempts:
