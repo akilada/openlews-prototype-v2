@@ -52,10 +52,7 @@ class TelemetryFetcher:
 
     # Primary fetch methods
     def fetch_by_time_range(
-        self,
-        start_time: int,
-        end_time: int,
-        sensor_ids: Optional[List[str]] = None
+        self, start_time: int, end_time: int, sensor_ids: Optional[List[str]] = None
     ) -> Dict[str, List[Dict]]:
         """
         Fetch telemetry within a time range.
@@ -74,10 +71,7 @@ class TelemetryFetcher:
         return self._fetch_all_sensors(start_time, end_time)
 
     def _fetch_by_sensors(
-        self,
-        sensor_ids: List[str],
-        start_time: int,
-        end_time: int
+        self, sensor_ids: List[str], start_time: int, end_time: int
     ) -> Dict[str, List[Dict]]:
         """
         Query telemetry for specific sensors using (sensor_id, timestamp) keys.
@@ -91,8 +85,8 @@ class TelemetryFetcher:
                 items: List[Dict] = []
                 response = self.table.query(
                     KeyConditionExpression=(
-                        Key("sensor_id").eq(sensor_id) &
-                        Key("timestamp").between(start_time, end_time)
+                        Key("sensor_id").eq(sensor_id)
+                        & Key("timestamp").between(start_time, end_time)
                     ),
                     ScanIndexForward=True,
                 )
@@ -101,8 +95,8 @@ class TelemetryFetcher:
                 while "LastEvaluatedKey" in response:
                     response = self.table.query(
                         KeyConditionExpression=(
-                            Key("sensor_id").eq(sensor_id) &
-                            Key("timestamp").between(start_time, end_time)
+                            Key("sensor_id").eq(sensor_id)
+                            & Key("timestamp").between(start_time, end_time)
                         ),
                         ExclusiveStartKey=response["LastEvaluatedKey"],
                         ScanIndexForward=True,
@@ -118,10 +112,14 @@ class TelemetryFetcher:
                 continue
 
         total_records = sum(len(v) for v in telemetry_by_sensor.values())
-        logger.info(f"Fetched {total_records} records for {len(telemetry_by_sensor)} sensors")
+        logger.info(
+            f"Fetched {total_records} records for {len(telemetry_by_sensor)} sensors"
+        )
         return telemetry_by_sensor
 
-    def _fetch_all_sensors(self, start_time: int, end_time: int) -> Dict[str, List[Dict]]:
+    def _fetch_all_sensors(
+        self, start_time: int, end_time: int
+    ) -> Dict[str, List[Dict]]:
         """
         Fetch telemetry for all sensors within a time range.
 
@@ -171,10 +169,7 @@ class TelemetryFetcher:
 
     # Optional GSI-based methods
     def fetch_by_hazard_level(
-        self,
-        hazard_level: str,
-        start_time: int,
-        end_time: int
+        self, hazard_level: str, start_time: int, end_time: int
     ) -> Dict[str, List[Dict]]:
         """
         Fetch telemetry for sensors in a specific hazard level using HazardLevelIndex GSI.
@@ -192,8 +187,8 @@ class TelemetryFetcher:
             response = self.table.query(
                 IndexName=self.HAZARD_LEVEL_INDEX,
                 KeyConditionExpression=(
-                    Key("hazard_level").eq(hazard_level) &
-                    Key("timestamp").between(start_time, end_time)
+                    Key("hazard_level").eq(hazard_level)
+                    & Key("timestamp").between(start_time, end_time)
                 ),
                 ScanIndexForward=True,
             )
@@ -203,8 +198,8 @@ class TelemetryFetcher:
                 response = self.table.query(
                     IndexName=self.HAZARD_LEVEL_INDEX,
                     KeyConditionExpression=(
-                        Key("hazard_level").eq(hazard_level) &
-                        Key("timestamp").between(start_time, end_time)
+                        Key("hazard_level").eq(hazard_level)
+                        & Key("timestamp").between(start_time, end_time)
                     ),
                     ExclusiveStartKey=response["LastEvaluatedKey"],
                     ScanIndexForward=True,
@@ -231,10 +226,7 @@ class TelemetryFetcher:
         return telemetry_by_sensor
 
     def fetch_by_geohash(
-        self,
-        geohash: str,
-        start_time: int,
-        end_time: int
+        self, geohash: str, start_time: int, end_time: int
     ) -> Dict[str, List[Dict]]:
         """
         Fetch telemetry for a geohash area using SpatialIndex GSI.
@@ -252,8 +244,8 @@ class TelemetryFetcher:
             response = self.table.query(
                 IndexName=self.SPATIAL_INDEX,
                 KeyConditionExpression=(
-                    Key("geohash").eq(geohash) &
-                    Key("timestamp").between(start_time, end_time)
+                    Key("geohash").eq(geohash)
+                    & Key("timestamp").between(start_time, end_time)
                 ),
                 ScanIndexForward=True,
             )
@@ -263,8 +255,8 @@ class TelemetryFetcher:
                 response = self.table.query(
                     IndexName=self.SPATIAL_INDEX,
                     KeyConditionExpression=(
-                        Key("geohash").eq(geohash) &
-                        Key("timestamp").between(start_time, end_time)
+                        Key("geohash").eq(geohash)
+                        & Key("timestamp").between(start_time, end_time)
                     ),
                     ExclusiveStartKey=response["LastEvaluatedKey"],
                     ScanIndexForward=True,
@@ -292,9 +284,7 @@ class TelemetryFetcher:
 
     # Convenience methods
     def fetch_latest_per_sensor(
-        self,
-        sensor_ids: Optional[List[str]] = None,
-        lookback_hours: int = 24
+        self, sensor_ids: Optional[List[str]] = None, lookback_hours: int = 24
     ) -> Dict[str, Dict]:
         """
         Fetch the most recent telemetry record for each sensor.
@@ -316,8 +306,8 @@ class TelemetryFetcher:
             try:
                 resp = self.table.query(
                     KeyConditionExpression=(
-                        Key("sensor_id").eq(sensor_id) &
-                        Key("timestamp").between(start_time, end_time)
+                        Key("sensor_id").eq(sensor_id)
+                        & Key("timestamp").between(start_time, end_time)
                     ),
                     ScanIndexForward=False,
                     Limit=1,
@@ -331,7 +321,9 @@ class TelemetryFetcher:
         logger.info(f"Got latest telemetry for {len(latest_by_sensor)} sensors")
         return latest_by_sensor
 
-    def fetch_for_analysis_window(self, sensor_id: str, window_minutes: int = 60) -> List[Dict]:
+    def fetch_for_analysis_window(
+        self, sensor_id: str, window_minutes: int = 60
+    ) -> List[Dict]:
         """
         Fetch telemetry for a single sensor over a recent window (default 60 min).
         """
@@ -342,10 +334,7 @@ class TelemetryFetcher:
 
 
 def get_recent_telemetry(
-    dynamodb_resource,
-    table_name: str,
-    sensor_ids: List[str],
-    hours: int = 1
+    dynamodb_resource, table_name: str, sensor_ids: List[str], hours: int = 1
 ) -> Dict[str, List[Dict]]:
 
     fetcher = TelemetryFetcher(dynamodb_resource, table_name)

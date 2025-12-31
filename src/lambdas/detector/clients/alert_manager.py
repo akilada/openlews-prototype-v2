@@ -76,7 +76,9 @@ class AlertManager:
             return [AlertManager._to_native(v) for v in x]
         return x
 
-    def __init__(self, dynamodb_resource, alerts_table_name: str, sns_client, sns_topic_arn: str):
+    def __init__(
+        self, dynamodb_resource, alerts_table_name: str, sns_client, sns_topic_arn: str
+    ):
         self.table = dynamodb_resource.Table(alerts_table_name)
         self.sns = sns_client
         self.sns_topic_arn = sns_topic_arn
@@ -89,17 +91,24 @@ class AlertManager:
                 KeyConditionExpression="#status = :status",
                 FilterExpression="begins_with(alert_id, :prefix)",
                 ExpressionAttributeNames={"#status": "status"},
-                ExpressionAttributeValues={":status": "active", ":prefix": alert_id_prefix},
+                ExpressionAttributeValues={
+                    ":status": "active",
+                    ":prefix": alert_id_prefix,
+                },
                 ScanIndexForward=False,
                 Limit=1,
             )
             if response.get("Items"):
                 alert = response["Items"][0]
-                logger.info("Found active alert", extra={"alert_id": alert.get("alert_id")})
+                logger.info(
+                    "Found active alert", extra={"alert_id": alert.get("alert_id")}
+                )
                 return alert
             return None
         except Exception:
-            logger.exception("Failed to query active alerts", extra={"prefix": alert_id_prefix})
+            logger.exception(
+                "Failed to query active alerts", extra={"prefix": alert_id_prefix}
+            )
             return None
 
     def create_alert(
@@ -125,7 +134,11 @@ class AlertManager:
         timestamp = int(time.time())
         alert_id = self._generate_alert_id(alert_id_prefix, timestamp)
 
-        is_cluster = bool(detection_data.get("members")) or bool(detection_data.get("size")) or bool(detection_data.get("cluster_size"))
+        is_cluster = (
+            bool(detection_data.get("members"))
+            or bool(detection_data.get("size"))
+            or bool(detection_data.get("cluster_size"))
+        )
         logger.info(
             "Creating new alert",
             extra={
@@ -173,44 +186,56 @@ class AlertManager:
             "llm_reasoning": llm_assessment.get("reasoning"),
             "trigger_factors": llm_assessment.get("trigger_factors", []),
             "recommended_action": llm_assessment.get("recommended_action"),
-            "time_to_failure": llm_assessment.get("time_to_failure_estimate", "unknown"),
+            "time_to_failure": llm_assessment.get(
+                "time_to_failure_estimate", "unknown"
+            ),
             "references": llm_assessment.get("references", []),
             "narrative_english": narrative,
             "detection_type": "cluster" if is_cluster else "individual",
-
             "latitude": lat,
             "longitude": lon,
-            "google_maps_url": (loc.get("google_maps_url") if isinstance(loc, dict) else None),
-
+            "google_maps_url": (
+                loc.get("google_maps_url") if isinstance(loc, dict) else None
+            ),
             "geological_context": {
                 "hazard_level": rag_context.get("hazard_level", "Unknown"),
                 "soil_type": rag_context.get("soil_type", "Unknown"),
                 "critical_moisture": rag_context.get("critical_moisture_percent", 40),
             },
-
             "escalation_history": [
-                {"timestamp": timestamp, "from_level": "NONE", "to_level": llm_assessment["risk_level"], "reason": "Initial alert"}
+                {
+                    "timestamp": timestamp,
+                    "from_level": "NONE",
+                    "to_level": llm_assessment["risk_level"],
+                    "reason": "Initial alert",
+                }
             ],
-
             "location": {
                 "label": (loc or {}).get("location_label", "Unknown"),
                 "google_maps_url": (loc or {}).get("google_maps_url"),
-                "google_maps_directions_url": (loc or {}).get("google_maps_directions_url"),
+                "google_maps_directions_url": (loc or {}).get(
+                    "google_maps_directions_url"
+                ),
                 "resolved_by": (loc or {}).get("resolved_by", "unknown"),
                 "address": (loc or {}).get("address", {}) or {},
                 "place": (loc or {}).get("place", {}) or {},
             },
-
             "ttl": timestamp + self.ALERT_TTL_SECONDS,
         }
 
         if is_cluster:
             members = detection_data.get("members", [])
-            cluster_size = detection_data.get("cluster_size") or detection_data.get("size") or len(members)
+            cluster_size = (
+                detection_data.get("cluster_size")
+                or detection_data.get("size")
+                or len(members)
+            )
             alert["cluster_size"] = int(cluster_size)
             alert["sensors_affected"] = members
             alert["center_location"] = detection_data.get("center_location", {})
-            alert["center_sensor"] = detection_data.get("center_sensor", alert_id_prefix)
+            alert["center_sensor"] = detection_data.get(
+                "center_sensor", alert_id_prefix
+            )
         else:
             alert["sensor_id"] = detection_data.get("sensor_id", alert_id_prefix)
 
@@ -218,16 +243,29 @@ class AlertManager:
         self.table.put_item(Item=alert)
 
         self._publish_to_sns(alert)
-        return {"action": "created", "alert_id": alert_id, "risk_level": alert.get("risk_level")}
+        return {
+            "action": "created",
+            "alert_id": alert_id,
+            "risk_level": alert.get("risk_level"),
+        }
 
-    def escalate_alert(self, existing_alert: Dict, new_assessment: Dict, detection_data: Dict, rag_context: Dict) -> Dict:
+    def escalate_alert(
+        self,
+        existing_alert: Dict,
+        new_assessment: Dict,
+        detection_data: Dict,
+        rag_context: Dict,
+    ) -> Dict:
         alert_id = existing_alert["alert_id"]
         timestamp = int(time.time())
 
         old_level = existing_alert["risk_level"]
         new_level = new_assessment["risk_level"]
 
-        logger.info("Escalating alert", extra={"alert_id": alert_id, "from": old_level, "to": new_level})
+        logger.info(
+            "Escalating alert",
+            extra={"alert_id": alert_id, "from": old_level, "to": new_level},
+        )
 
         escalation_entry = {
             "timestamp": timestamp,
@@ -272,7 +310,12 @@ class AlertManager:
         )
 
         self._publish_to_sns(updated_alert)
-        return {"action": "escalated", "alert_id": alert_id, "from_level": old_level, "to_level": new_level}
+        return {
+            "action": "escalated",
+            "alert_id": alert_id,
+            "from_level": old_level,
+            "to_level": new_level,
+        }
 
     def _generate_alert_id(self, prefix: str, timestamp: int) -> str:
         date_str = datetime.utcfromtimestamp(timestamp).strftime("%Y%m%d_%H%M%S")
@@ -310,6 +353,10 @@ class AlertManager:
                 Message=json.dumps(payload, ensure_ascii=False, indent=2),
             )
 
-            logger.info("SNS publish succeeded", extra={"alert_id": alert.get("alert_id")})
+            logger.info(
+                "SNS publish succeeded", extra={"alert_id": alert.get("alert_id")}
+            )
         except Exception:
-            logger.exception("SNS publish failed", extra={"alert_id": alert.get("alert_id")})
+            logger.exception(
+                "SNS publish failed", extra={"alert_id": alert.get("alert_id")}
+            )

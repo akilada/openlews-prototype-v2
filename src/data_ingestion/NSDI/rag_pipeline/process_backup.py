@@ -39,11 +39,7 @@ import boto3
 from dotenv import load_dotenv
 
 # Import shared processor
-from geo_processor import (
-    GeoJSONProcessor,
-    estimate_item_size,
-    GEOHASH_AVAILABLE
-)
+from geo_processor import GeoJSONProcessor, estimate_item_size, GEOHASH_AVAILABLE
 
 load_dotenv()
 
@@ -73,6 +69,7 @@ class EmbeddingGenerator:
         if self.method == "local":
             try:
                 from sentence_transformers import SentenceTransformer
+
                 print(f"  Loading embedding model: {model}...")
                 self.model = SentenceTransformer(model)
                 print("  ✓ Model loaded")
@@ -95,9 +92,11 @@ class EmbeddingGenerator:
             return [None] * len(items)
 
 
-def load_backup_file(filepath: str,
-                     limit: Optional[int] = None,
-                     bounds: Optional[Tuple[float, float, float, float]] = None) -> List[Dict]:
+def load_backup_file(
+    filepath: str,
+    limit: Optional[int] = None,
+    bounds: Optional[Tuple[float, float, float, float]] = None,
+) -> List[Dict]:
     print(f"\n📂 Loading backup file: {filepath}")
 
     if not os.path.exists(filepath):
@@ -112,11 +111,18 @@ def load_backup_file(filepath: str,
 
     if bounds:
         min_lat, max_lat, min_lon, max_lon = bounds
-        print(f"  🗺️  Filtering by bounds: lat [{min_lat}, {max_lat}], lon [{min_lon}, {max_lon}]")
+        print(
+            f"  🗺️  Filtering by bounds: lat [{min_lat}, {max_lat}], lon [{min_lon}, {max_lon}]"
+        )
         filtered = []
         for feature in features:
-            centroid_lat, centroid_lon = GeoJSONProcessor.extract_centroid(feature.get("geometry", {}))
-            if min_lat <= centroid_lat <= max_lat and min_lon <= centroid_lon <= max_lon:
+            centroid_lat, centroid_lon = GeoJSONProcessor.extract_centroid(
+                feature.get("geometry", {})
+            )
+            if (
+                min_lat <= centroid_lat <= max_lat
+                and min_lon <= centroid_lon <= max_lon
+            ):
                 filtered.append(feature)
 
         print(f"  ✓ Filtered to {len(filtered):,} features within bounds")
@@ -129,8 +135,12 @@ def load_backup_file(filepath: str,
     return features
 
 
-def ingest_to_dynamodb(items: List[Dict], table_name: str, batch_size: int = 25, dry_run: bool = False) -> int:
-    print(f"\n📊 {'[DRY RUN] ' if dry_run else ''}Ingesting {len(items):,} items into DynamoDB: {table_name}")
+def ingest_to_dynamodb(
+    items: List[Dict], table_name: str, batch_size: int = 25, dry_run: bool = False
+) -> int:
+    print(
+        f"\n📊 {'[DRY RUN] ' if dry_run else ''}Ingesting {len(items):,} items into DynamoDB: {table_name}"
+    )
 
     oversized = []
     for item in items:
@@ -154,7 +164,7 @@ def ingest_to_dynamodb(items: List[Dict], table_name: str, batch_size: int = 25,
     total_batches = (len(items) + batch_size - 1) // batch_size
 
     for i in range(0, len(items), batch_size):
-        batch = items[i:i + batch_size]
+        batch = items[i : i + batch_size]
         batch_num = i // batch_size + 1
 
         with table.batch_writer() as writer:
@@ -170,7 +180,9 @@ def ingest_to_dynamodb(items: List[Dict], table_name: str, batch_size: int = 25,
                         print(f"  ❌ Failed to insert {item.get('zone_id')}: {e}")
 
         if batch_num % 100 == 0 or batch_num == total_batches:
-            print(f"  ✓ Batch {batch_num:,}/{total_batches:,} ({inserted_count:,}/{len(items):,} items)")
+            print(
+                f"  ✓ Batch {batch_num:,}/{total_batches:,} ({inserted_count:,}/{len(items):,} items)"
+            )
         time.sleep(0.05)
 
     print(f"✅ DynamoDB ingestion complete: {inserted_count:,}/{len(items):,} items")
@@ -190,6 +202,7 @@ def _pinecone_client():
     """Create Pinecone client with clear errors."""
     try:
         from pinecone import Pinecone
+
         return Pinecone(api_key=PINECONE_API_KEY)
     except ImportError:
         print("❌ Pinecone SDK not installed.")
@@ -208,7 +221,9 @@ def _pinecone_index_dimension(pc, index_name: str) -> Optional[int]:
         return None
 
 
-def upsert_to_pinecone(items: List[Dict], embeddings: List[Optional[List[float]]], dry_run: bool = False) -> int:
+def upsert_to_pinecone(
+    items: List[Dict], embeddings: List[Optional[List[float]]], dry_run: bool = False
+) -> int:
     if not PINECONE_API_KEY:
         print("⚠️  PINECONE_API_KEY not set. Skipping Pinecone upload.")
         return 0
@@ -217,7 +232,9 @@ def upsert_to_pinecone(items: List[Dict], embeddings: List[Optional[List[float]]
     if pc is None:
         return 0
 
-    print(f"\n🌲 {'[DRY RUN] ' if dry_run else ''}Upserting vectors to Pinecone: {PINECONE_INDEX_NAME}")
+    print(
+        f"\n🌲 {'[DRY RUN] ' if dry_run else ''}Upserting vectors to Pinecone: {PINECONE_INDEX_NAME}"
+    )
 
     # Dimension sanity check
     first_emb = next((e for e in embeddings if e is not None), None)
@@ -259,25 +276,25 @@ def upsert_to_pinecone(items: List[Dict], embeddings: List[Optional[List[float]]
             "shape_area": float(item.get("metadata", {}).get("shape_area", 0.0)),
         }
 
-        vectors.append({
-            "id": item["zone_id"],
-            "values": embedding,
-            "metadata": metadata
-        })
+        vectors.append(
+            {"id": item["zone_id"], "values": embedding, "metadata": metadata}
+        )
 
     batch_size = 100
     upserted = 0
     total_batches = (len(vectors) + batch_size - 1) // batch_size
 
     for i in range(0, len(vectors), batch_size):
-        batch = vectors[i:i + batch_size]
+        batch = vectors[i : i + batch_size]
         batch_num = i // batch_size + 1
 
         index.upsert(vectors=batch, namespace=PINECONE_NAMESPACE)
         upserted += len(batch)
 
         if batch_num % 50 == 0 or batch_num == total_batches:
-            print(f"  ✓ Batch {batch_num:,}/{total_batches:,} ({upserted:,}/{len(vectors):,} vectors)")
+            print(
+                f"  ✓ Batch {batch_num:,}/{total_batches:,} ({upserted:,}/{len(vectors):,} vectors)"
+            )
 
         time.sleep(0.1)
 
@@ -286,16 +303,31 @@ def upsert_to_pinecone(items: List[Dict], embeddings: List[Optional[List[float]]
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Process NSDI backup and upload to DynamoDB/Pinecone")
+    parser = argparse.ArgumentParser(
+        description="Process NSDI backup and upload to DynamoDB/Pinecone"
+    )
     parser.add_argument("--limit", type=int, help="Limit number of records to process")
     parser.add_argument("--embeddings", action="store_true", help="Generate embeddings")
     parser.add_argument("--pinecone", action="store_true", help="Upload to Pinecone")
-    parser.add_argument("--filter-bounds", type=str, help="Filter by bounds: min_lat,max_lat,min_lon,max_lon")
-    parser.add_argument("--skip-dynamodb", action="store_true", help="Skip DynamoDB upload")
-    parser.add_argument("--dry-run", action="store_true", help="Process but don't upload")
-    parser.add_argument("--input", type=str, default=BACKUP_FILE, help="Input JSON file path")
-    parser.add_argument("--include-geometry", action="store_true",
-                        help="Include full geometry (WARNING: may exceed 400KB limit)")
+    parser.add_argument(
+        "--filter-bounds",
+        type=str,
+        help="Filter by bounds: min_lat,max_lat,min_lon,max_lon",
+    )
+    parser.add_argument(
+        "--skip-dynamodb", action="store_true", help="Skip DynamoDB upload"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Process but don't upload"
+    )
+    parser.add_argument(
+        "--input", type=str, default=BACKUP_FILE, help="Input JSON file path"
+    )
+    parser.add_argument(
+        "--include-geometry",
+        action="store_true",
+        help="Include full geometry (WARNING: may exceed 400KB limit)",
+    )
     args = parser.parse_args()
 
     print("=" * 70)
@@ -304,13 +336,17 @@ def main():
     print(f"  AWS Region: {AWS_REGION}")
     print(f"  DynamoDB Table: {DYNAMODB_TABLE_NAME}")
     print(f"  Input File: {args.input}")
-    print(f"  Geohash Library: {'pygeohash' if GEOHASH_AVAILABLE else 'simple fallback'}")
+    print(
+        f"  Geohash Library: {'pygeohash' if GEOHASH_AVAILABLE else 'simple fallback'}"
+    )
     print(f"  Include Geometry: {args.include_geometry}")
     if args.dry_run:
         print("  ⚠️  DRY RUN MODE - No data will be written")
 
     if args.include_geometry:
-        print("\n  ⚠️  WARNING: Including full geometry may exceed DynamoDB's 400KB limit.")
+        print(
+            "\n  ⚠️  WARNING: Including full geometry may exceed DynamoDB's 400KB limit."
+        )
 
     bounds = None
     if args.filter_bounds:
@@ -333,7 +369,9 @@ def main():
 
     for idx, feature in enumerate(features):
         try:
-            item = GeoJSONProcessor.process_feature(feature, include_geometry=args.include_geometry)
+            item = GeoJSONProcessor.process_feature(
+                feature, include_geometry=args.include_geometry
+            )
             processed_items.append(item)
         except Exception as e:
             errors.append(f"Feature {idx}: {e}")
@@ -353,7 +391,11 @@ def main():
     print("\n📏 Item Size Statistics:")
     print(f"   Average: {avg_size / 1024:.1f}KB")
     print(f"   Maximum: {max_size / 1024:.1f}KB")
-    print(f"   Oversized (>400KB): {oversized}" if oversized else "   ✓ All items within 400KB limit")
+    print(
+        f"   Oversized (>400KB): {oversized}"
+        if oversized
+        else "   ✓ All items within 400KB limit"
+    )
 
     # Embeddings
     embeddings: List[Optional[List[float]]] = [None] * len(processed_items)
@@ -399,5 +441,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
