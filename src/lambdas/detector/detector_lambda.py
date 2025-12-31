@@ -510,7 +510,7 @@ def lambda_handler(event: Dict, context: LambdaContext) -> Dict:
                 partial_info["clusters_detected"] = len(analysis.get("clusters", []))
             if 'alerts' in locals():
                 partial_info["alerts_processed_before_error"] = len(alerts)
-        except:
+        except Exception:
             pass
         
         return {

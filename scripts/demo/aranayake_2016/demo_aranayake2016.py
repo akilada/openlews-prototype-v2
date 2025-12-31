@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
@@ -334,8 +334,9 @@ class SensorPlacement:
         sensor_num = 1
         
         # Calculate grid extents
-        total_width = (cols - 1) * spacing_m
-        total_height = (rows - 1) * spacing_m * 0.866  # √3/2 for hex packing
+        # Currently using zone-based factors which implicitly capture elevation effects
+        _total_width = (cols - 1) * spacing_m
+        _total_height = (rows - 1) * spacing_m * 0.866  # √3/2 for hex packing
         
         for row in range(rows):
             # Alternate row offset (Quincunx pattern)
@@ -522,7 +523,9 @@ class TelemetryGenerator:
         """
         zone = sensor.get("zone", "UNKNOWN")
         depth_m = sensor.get("depth_m", 0.5)
-        elevation_m = sensor.get("elevation_m", 300)
+
+        # Future enhancement: Use elevation_m for pressure/moisture gradients
+        _elevation_m = sensor.get("elevation_m", 300)
         
         # Base values scaled by zone and time
         progress = hour_of_scenario / 72.0  # 0.0 to 1.0
